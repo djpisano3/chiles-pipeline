@@ -4,6 +4,7 @@
 # makes some diagnostic plots.  
 # 9/9/15 DJP
 # Removed clipping due to overflagging 12/7/15 DJP
+# Set extendpols=False in RFLAG 1/27/16 DJP
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
 time_list=runtiming('target', 'start')
@@ -51,6 +52,7 @@ ntime='scan'
 combinescans=False
 datacolumn='corrected'
 extendflags=False        # Added (KH)
+extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
 winsize=3
 freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]
 timedev=[[ff,0.0,8.0],[ff,1.0,6.2],[ff,2.0,5.1],[ff,3.0,4.6],[ff,4.0,4.4],[ff,5.0,4.2],[ff,6.0,4.1],[ff,7.0,4.2],[ff,8.0,3.7],[ff,9.0,3.4],[ff,10.0,3.3],[ff,11.0,3.4],[ff,12.0,3.3],[ff,13.0,3.4],[ff,14.0,3.4]]

@@ -7,6 +7,8 @@
 # 9/7/15 DJP
 # HG fixed a number of bugs and explicitly sets caltable and spw lists correctly.
 # 12/7/15 DJP
+# 1/27/16 DJP: Set extendpols=False in RFLAG step.
+
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -426,6 +428,7 @@ ntime='scan'
 combinescans=False
 datacolumn='corrected'
 extendflags=False    # Explicitly set to False as default is True.  Extend is explicitly done later.  
+extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
 winsize=3
 # The following noise levels are taken from tests by XF.
 freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]

@@ -13,6 +13,8 @@
 # 1/14/16, DJP: Set fillgaps=10 with interp='linear,spline' in bandpass (probably no effect)
 #               Set interp=',spline' for BPcal tables for frequency interpolation.
 
+# 1/27/16 DJP: Set extendpols=False in RFLAG step.
+
 #Part I: define some variables that will be used later
 import copy
 import numpy as np
@@ -332,7 +334,8 @@ correlation=''
 ntime='scan'
 combinescans=False
 datacolumn='corrected'
-extendflags=False    # Explicitly set to False since default is True.  Extending on next step.  
+extendflags=False    # Explicitly set to False since default is True.  Extending on next step. 
+extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
 winsize=3
 freqdev=[[ff,0.0,7.1],[ff,1.0,5.5],[ff,2.0,4.5],[ff,3.0,4.1],[ff,4.0,3.9],[ff,5.0,3.7],[ff,6.0,3.6],[ff,7.0,3.7],[ff,8.0,3.3],[ff,9.0,3.0],[ff,10.0,3.0],[ff,11.0,3.0],[ff,12.0,2.9],[ff,13.0,3.0],[ff,14.0,3.0]]
 timedev=[[ff,0.0,9.4],[ff,1.0,7.3],[ff,2.0,5.9],[ff,3.0,5.4],[ff,4.0,5.2],[ff,5.0,4.9],[ff,6.0,4.8],[ff,7.0,4.9],[ff,8.0,4.4],[ff,9.0,4.0],[ff,10.0,3.9],[ff,11.0,3.9],[ff,12.0,3.9],[ff,13.0,4.0],[ff,14.0,4.0]]

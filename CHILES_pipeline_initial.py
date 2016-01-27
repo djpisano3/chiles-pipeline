@@ -25,10 +25,13 @@
 #       in order to ID excessive flagging (for testing purposes only).  Testing 
 #       bandpass with fillgaps=10, interp='linear','spline' since BP seems to be interpolating anyways.  
 #       1/13/16 DJP
+# v0.10:  Fixed code to apply online flags & zero flags when importing SDM with importevla
+#         Also extendpols=False set for all RFLAG runs.
+#         1/27/16 DJP
 
-version = "0.9"
+version = "0.10"
 svnrevision = '11nnn'
-date = "2016Jan14"
+date = "2016Jan25"
 
 print "Pipeline version "+version+" for use with CASA 4.5.0"
 import sys
@@ -128,13 +131,13 @@ try:
         scans=''
         verbose=True
         overwrite=False
-        online=True         #KMH, apply online flags when importing.  Why wait?
-        flagzero=False
+        online=True         #KMH, calculate online flags when importing. 
+        flagzero=True       # Calculate zero flags when importing.
         flagpol=False
         shadow=False
         tolerance=0.0
         addantenna=''
-        applyflags=False
+        applyflags=True     #Apply online, zero flags on import.
         savecmds=False
         flagbackup=False
         importevla()
@@ -264,10 +267,6 @@ try:
         integ_scan_list.append(int(scan))
     sorted_scan_list = sorted(integ_scan_list)
     
-# Set the integration time:
-    int_time=8.0                      #KMH
-    logprint ("Maximum integration time is "+str(int_time)+"s", logfileout='logs/initial.log')
-
 # Find scans for quacking
 
     scan_list = [1]
@@ -648,20 +647,21 @@ try:
     syscommand='rm -rf '+outputflagfile
     os.system(syscommand)
     
+# Zero flagging done on import in version 0.10 and following.
 # First do zero flagging (reason='CLIP_ZERO_ALL')
-    default('flagdata')
-    vis=ms_active
-    mode='clip'
-    clipzeros=True
-    correlation='ABS_ALL'
-    action='apply'
-    flagbackup=False
-    savepars=False
-    async=False
-    outfile=outputflagfile
-    myzeroflags = flagdata()
-    clearstat()
-    logprint ("Zero flags carried out", logfileout='logs/initial.log')
+    #default('flagdata')
+    #vis=ms_active
+    #mode='clip'
+    #clipzeros=True
+    #correlation='ABS_ALL'
+    #action='apply'
+    #flagbackup=False
+    #savepars=False
+    #async=False
+    #outfile=outputflagfile
+    #myzeroflags = flagdata()
+    #clearstat()
+    #logprint ("Zero flags carried out", logfileout='logs/initial.log')
     
 # Now shadow flagging
 # Not needed for B configuration observations
