@@ -673,7 +673,7 @@ try:
         myzeroflags = flagdata()
         clearstat()
         logprint ("Zero flags carried out", logfileout='logs/initial.log')
-   else:
+    else:
         logprint ("Zero flagging already applied on import", logfileout='logs/initial.log')
          
 # Now shadow flagging
