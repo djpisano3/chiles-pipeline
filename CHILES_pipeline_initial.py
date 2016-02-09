@@ -28,10 +28,13 @@
 # v0.10:  Fixed code to apply online flags & zero flags when importing SDM with importevla
 #         Also extendpols=False set for all RFLAG runs.
 #         1/27/16 DJP
+# v0.11:  Added check to apply zero flags (and remind user about online flags) when working with MS.
+#         removed multiple flagdata, mode='summary' runs and limit to specific sources.
+#         remove explicit interpolation in bandpass, applycal runs (unclear if it is useful to vary)
 
-version = "0.10"
+version = "0.11"
 svnrevision = '11nnn'
-date = "2016Jan25"
+date = "2016Feb09"
 
 print "Pipeline version "+version+" for use with CASA 4.5.0"
 import sys
@@ -143,10 +146,13 @@ try:
         importevla()
 
         logprint ("Measurement set "+msname+" created", logfileout='logs/initial.log')
-
+        ms_create_flag=True
     else:
         logprint ("Measurement set already exists, will use "+msname, logfileout='logs/initial.log')
-
+        ms_create_flag=False
+# Online flagging should be done when importing ASDM or creating MS.  Remind user of this.
+        logprint ("If MS created outside this module, be sure online flags were applied then.", logfileout='logs/initial.log')
+        
 ######################################################################
 
 # HANNING SMOOTH (OPTIONAL, MAY BE IMPORTANT IF THERE IS NARROWBAND RFI)
@@ -266,6 +272,10 @@ try:
     for scan in scan_summary:
         integ_scan_list.append(int(scan))
     sorted_scan_list = sorted(integ_scan_list)
+    
+# Set the integration time:
+    int_time=8.0                      #KMH
+    logprint ("Maximum integration time is "+str(int_time)+"s", logfileout='logs/initial.log')
     
 # Find scans for quacking
 
@@ -646,23 +656,26 @@ try:
     outputflagfile = 'flagging_commands1.txt'
     syscommand='rm -rf '+outputflagfile
     os.system(syscommand)
-    
-# Zero flagging done on import in version 0.10 and following.
+        
+# Zero flagging done on import in version 0.10 and following, but in case it wasn't.
 # First do zero flagging (reason='CLIP_ZERO_ALL')
-    #default('flagdata')
-    #vis=ms_active
-    #mode='clip'
-    #clipzeros=True
-    #correlation='ABS_ALL'
-    #action='apply'
-    #flagbackup=False
-    #savepars=False
-    #async=False
-    #outfile=outputflagfile
-    #myzeroflags = flagdata()
-    #clearstat()
-    #logprint ("Zero flags carried out", logfileout='logs/initial.log')
-    
+    if ms_create_flag==False:
+        default('flagdata')
+        vis=ms_active
+        mode='clip'
+        clipzeros=True
+        correlation='ABS_ALL'
+        action='apply'
+        flagbackup=False
+        savepars=False
+        async=False
+        outfile=outputflagfile
+        myzeroflags = flagdata()
+        clearstat()
+        logprint ("Zero flags carried out", logfileout='logs/initial.log')
+   else:
+        logprint ("Zero flagging already applied on import", logfileout='logs/initial.log')
+         
 # Now shadow flagging
 # Not needed for B configuration observations
     #default('flagdata')
@@ -740,7 +753,8 @@ try:
     spwchan=True
     spwcorr=True
     action='calculate'
-    flagdata()
+    s_i=flagdata() # Save results to dictionary
+    logprint ("Percentage of all data flagged after initial module: "+s_i['flagged']/s_i['total']*100+'%', logfileout='logs/initial.log')
     
 
 ######################################################################

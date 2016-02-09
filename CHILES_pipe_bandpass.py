@@ -14,6 +14,7 @@
 #               Set interp=',spline' for BPcal tables for frequency interpolation.
 
 # 1/27/16 DJP: Set extendpols=False in RFLAG step.
+# 2/09/16 DJP: Remove interpolation settings from 1/14/16 and a bunch of the flag summaries
 
 #Part I: define some variables that will be used later
 import copy
@@ -267,8 +268,8 @@ minblperant=minBL_for_cal
 minsnr=5.0
 solnorm=False       # Must be set to False otherwise solution doesn't apply BP to flagged channels
 bandtype='B'
-fillgaps=10          # Interpolation appears to be occurring regardless so set this to 10 channels
-interp=['linear,spline']          # Use linear interpolation in time, spline in frequency.
+fillgaps=0          # Skip interpolation, set to 0.
+interp=['']          # Default is linear interpolation in time, frequency.
 append=False
 gaintable=BPGainTables
 gainfield=['']
@@ -295,7 +296,7 @@ spw=''
 intent=''
 selectdata=True
 gaintable=AllCalTables
-interp=['','','',',spline','']         # Default is to interpolate linearly in time & frequency; interpolating frequency with spline for BP.
+interp=['','','','','']         # Default is to interpolate linearly in time & frequency.
 spwmap=AllSpwMapValues
 gaincurve=False
 opacity=[]
@@ -305,25 +306,11 @@ flagbackup=False
 async=False
 applycal()
 
-# Summary of flagging, after initial calib (for testing purposes only)
-logprint ("Summary of flags after initial BP cal", logfileout='logs/bandpass.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-flagdata()
-
-
 #8: First rflag run 
 logprint ("RFLAG+Extend on flux calibrator", logfileout='logs/bandpass.log')
 
 f=ms.msseltoindex(vis=ms_active,field='1331*')['field']
 ff= float(f[0])
-
 
 default('flagdata')
 vis=ms_active
@@ -346,18 +333,6 @@ display=''
 flagbackup=False
 savepars=True
 async=False
-flagdata()
-
-# Summary of flagging, after initial RFLAG (for testing purposes only)
-logprint ("Summary of flags after initial RFLAG", logfileout='logs/bandpass.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
 flagdata()
 
 #9:
@@ -386,13 +361,16 @@ flagdata()
 logprint ("Summary of flags after RFLAG+extend", logfileout='logs/bandpass.log')
 default('flagdata')
 vis=ms_active
+field='2'       # Only flagging 3C286, so don't need stats on other sources.
 mode='summary'
 spw='0~14'
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
 action='calculate'
-flagdata()
+s_b=flagdata()
+
+logprint ("Percentage of all data flagged after flagging in BP module: "+s_b['flagged']/s_b['total']*100+'%', logfileout='logs/bandpass.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/bandpass.log')
@@ -534,8 +512,8 @@ minblperant=minBL_for_cal
 minsnr=5.0
 solnorm=False       # Must be set to False otherwise solution doesn't apply BP to flagged channels
 bandtype='B'
-fillgaps=10          # Interpolation appears to be occurring regardless so set this to 10 channels
-interp=['linear,spline']          # Use linear interpolation in time, spline in frequency.
+fillgaps=0          # No frequency interpolation desired.
+interp=['']          # Default linear interpolation in time, frequency.
 append=False
 gaintable=BPGainTables
 gainfield=['']
@@ -563,7 +541,7 @@ spw=''
 intent=''
 selectdata=True
 gaintable=AllCalTables
-interp=['','','',',spline','']         # Default is to interpolate linearly in time & frequency; interpolating frequency with spline for BP.
+interp=['','','','','']         # Default is to interpolate linearly in time & frequency.
 spwmap=AllSpwMapValues
 gaincurve=False
 opacity=[]
@@ -572,18 +550,6 @@ calwt=False
 flagbackup=False
 async=False
 applycal()
-
-# Summary of flagging, after final BP calib (for testing purposes only)
-logprint ("Summary of flags after final BP cal", logfileout='logs/bandpass.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-flagdata()
 
 #--------------------------------------------------------------------
 #Part V: Data inspection

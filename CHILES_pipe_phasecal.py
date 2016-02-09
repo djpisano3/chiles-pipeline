@@ -8,7 +8,8 @@
 # HG fixed a number of bugs and explicitly sets caltable and spw lists correctly.
 # 12/7/15 DJP
 # 1/27/16 DJP: Set extendpols=False in RFLAG step.
-
+# 2/9/16 DJP: Removed many flag summaries, limit to phase calibrator.
+# 2/9/16 DJP: Moved applycal for target to "target" module.
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -400,18 +401,6 @@ flagbackup=False
 async=False
 applycal()
 
-# Summary of flagging, after initial phase calib (for testing purposes only)
-logprint ("Summary of flags after initial phase cal", logfileout='logs/phasecal.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-flagdata()
-
 # Step 6: run RFLAG and extend
 
 logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
@@ -442,18 +431,6 @@ savepars=True
 async=False
 flagdata()
 
-# Summary of flagging, after RFLAG (for testing purposes only)
-logprint ("Summary of flags after RFLAG", logfileout='logs/phasecal.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-flagdata()
-
 # Extend flags
 default('flagdata')
 vis=ms_active
@@ -482,11 +459,14 @@ default('flagdata')
 vis=ms_active
 mode='summary'
 spw='0~14'
+field='0'     # Only phase calibrator getting flagged so only source to check.
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
 action='calculate'
-flagdata()
+s_p=flagdata()
+
+logprint ("Percentage of all data flagged after flagging in phasecal module: "+s_p['flagged']/s_p['total']*100+'%', logfileout='logs/phasecal.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/phasecal.log')
@@ -857,50 +837,6 @@ flagbackup=False
 async=False
 applycal()
 
-TargetTables=copy.copy(priorcals)
-TargetTables.append('finalphase_scan.gcal')
-TargetTables.append('finalamp.gcal')
-TargetTables.append('finalflux.gcal')
-TargetSpwMapValues=copy.copy(priorspwmap)
-TargetSpwMapValues.append([])
-TargetSpwMapValues.append([])
-TargetSpwMapValues.append([])
-
-if os.path.exists('antposcal.p')==True:
-  TargetFields=['','','2','2','0','0','0']
-
-if os.path.exists('antposcal.p')==False:
-  TargetFields=['','2','2','0','0','0']
-
-default('applycal')
-vis=ms_active
-field='1'            # Apply same calibration to target
-spw=''
-intent=''
-selectdata=True
-gaintable=TargetTables    # HG : Change this from AllCalTables to TargetTables
-gainfield=TargetFields
-interp=['']
-spwmap=TargetSpwMapValues # Was [] in previous version, now corresponds to TargetTables
-gaincurve=False
-opacity=[]
-parang=False
-calwt=False
-flagbackup=False
-async=False
-applycal()
-
-# Summary of flagging, after final phase calib (for testing purposes only)
-logprint ("Summary of flags after final phase cal", logfileout='logs/phasecal.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-flagdata()
 
 #Clear model of phase calibrator for future runs of phasecal; has no effect on corrected column if all is okay already.
 default('delmod')

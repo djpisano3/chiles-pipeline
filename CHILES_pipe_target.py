@@ -5,6 +5,7 @@
 # 9/9/15 DJP
 # Removed clipping due to overflagging 12/7/15 DJP
 # Set extendpols=False in RFLAG 1/27/16 DJP
+# Included flag summary for target, and applycal for target moved here, 2/9/16 DJP
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
 time_list=runtiming('target', 'start')
@@ -21,8 +22,44 @@ import sys
 os.system("rm -rf images/target_spw*.*")
 os.system("rm -rf plots/target_*.png")
 
+logprint ("Apply calibration to target", logfileout='logs/target.log')
+
+TargetTables=copy.copy(priorcals)
+TargetTables.append('finalphase_scan.gcal')
+TargetTables.append('finalamp.gcal')
+TargetTables.append('finalflux.gcal')
+TargetSpwMapValues=copy.copy(priorspwmap)
+TargetSpwMapValues.append([])
+TargetSpwMapValues.append([])
+TargetSpwMapValues.append([])
+
+if os.path.exists('antposcal.p')==True:
+  TargetFields=['','','2','2','0','0','0']
+
+if os.path.exists('antposcal.p')==False:
+  TargetFields=['','2','2','0','0','0']
+
+default('applycal')
+vis=ms_active
+field='1'            # Apply same calibration to target
+spw=''
+intent=''
+selectdata=True
+gaintable=TargetTables    # HG : Change this from AllCalTables to TargetTables
+gainfield=TargetFields
+interp=['']
+spwmap=TargetSpwMapValues # Was [] in previous version, now corresponds to TargetTables
+gaincurve=False
+opacity=[]
+parang=False
+calwt=False
+flagbackup=False
+async=False
+applycal()
+
+
 # Step 2: RFLAG with extend on deepfield
-logprint("Flag deepfield",logfileout='logs/target.log')
+logprint("Flag deepfield with RFLAG",logfileout='logs/target.log')
  
 
 #EM: clip the target data by pre-set values determined by XF
@@ -92,9 +129,27 @@ clearstat()
 #
 #clearstat()
 
+logprint ("Not extending flags on target", logfileout='logs/target.log')
+
 #EM: back to normal logger output
 
 #casalog.filter("INFO")
+
+# Summary of flagging, after final flagging (for testing purposes only)
+logprint ("Summary of flags after flagging target", logfileout='logs/target.log')
+default('flagdata')
+vis=ms_active
+mode='summary'
+spw='0~14'
+field='1'           # Only flagged deepfield, no need to check others here.
+correlation='RR,LL'
+spwchan=True
+spwcorr=True
+action='calculate'
+s_t=flagdata()
+
+logprint ("Percentage of all data flagged after target module: "+s_i['flagged']/s_i['total']*100+'%', logfileout='logs/target.log')
+
 
 # Save final version of flags
 logprint("Saving flags",logfileout='logs/target.log')
@@ -108,6 +163,7 @@ merge='replace'
 async=False
 flagmanager()
 logprint ("Flag column saved to "+versionname, logfileout='logs/target.log')
+
 
 # Step 3: Diagnostic Plots
 logprint("Making diagnostic plots",logfileout='logs/target.log')
