@@ -466,7 +466,7 @@ spwcorr=True
 action='calculate'
 s_p=flagdata()
 
-logprint ("Percentage of all data flagged after flagging in phasecal module: "+s_p['flagged']/s_p['total']*100+'%', logfileout='logs/phasecal.log')
+logprint ("Percentage of all data flagged after flagging in phasecal module: "+str(s_p['flagged']/s_p['total']*100)+'%', logfileout='logs/phasecal.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/phasecal.log')

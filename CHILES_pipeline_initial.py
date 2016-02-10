@@ -754,7 +754,7 @@ try:
     spwcorr=True
     action='calculate'
     s_i=flagdata() # Save results to dictionary
-    logprint ("Percentage of all data flagged after initial module: "+s_i['flagged']/s_i['total']*100+'%', logfileout='logs/initial.log')
+    logprint ("Percentage of all data flagged after initial module: "+str(s_i['flagged']/s_i['total']*100)+'%', logfileout='logs/initial.log')
     
 
 ######################################################################

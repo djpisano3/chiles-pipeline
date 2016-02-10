@@ -370,7 +370,7 @@ spwcorr=True
 action='calculate'
 s_b=flagdata()
 
-logprint ("Percentage of all data flagged after flagging in BP module: "+s_b['flagged']/s_b['total']*100+'%', logfileout='logs/bandpass.log')
+logprint ("Percentage of all data flagged after flagging in BP module: "+str(s_b['flagged']/s_b['total']*100)+'%', logfileout='logs/bandpass.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/bandpass.log')

@@ -148,7 +148,7 @@ spwcorr=True
 action='calculate'
 s_t=flagdata()
 
-logprint ("Percentage of all data flagged after target module: "+s_i['flagged']/s_i['total']*100+'%', logfileout='logs/target.log')
+logprint ("Percentage of all data flagged after target module: "+str(s_i['flagged']/s_i['total']*100)+'%', logfileout='logs/target.log')
 
 
 # Save final version of flags
