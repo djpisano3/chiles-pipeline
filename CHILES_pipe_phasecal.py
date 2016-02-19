@@ -10,6 +10,12 @@
 # 1/27/16 DJP: Set extendpols=False in RFLAG step.
 # 2/9/16 DJP: Removed many flag summaries, limit to phase calibrator.
 # 2/9/16 DJP: Moved applycal for target to "target" module.
+# 2/11/16 DJP: Make cloud plots without any averaging.
+# 2/15/16 DJP: Changed ff value to a float.
+# 2/18/16 DJP: Make diagnostic plots with averaged, split data
+# 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
+# 2/18/16 DJP: If re-running phasecal module, need to delmod on phase calibrator.
+# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  Removed finalflux.gcal plot.
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -22,6 +28,7 @@ import re as re
 import sys
 
 #Remove old files from previous attempts using rmtables
+#Clear model of phase calibrator if module previously run.
 if os.path.exists('initialphase.gcal'):
     rmtables(tablenames='initialphase.gcal')
 if os.path.exists('initialamp.gcal'):
@@ -36,6 +43,13 @@ if os.path.exists('finalamp.gcal'):
     rmtables(tablenames='finalamp.gcal')
 if os.path.exists('finalflux.gcal'):
     rmtables(tablenames='finalflux.gcal')
+    # If caltables exist, then delmod must be run.
+    default('delmod')
+    vis=ms_active
+    otf=True
+    field='0'  # Hard-coded for phase calibrator
+    scr=False
+    delmod()
 os.system("rm -rf images/phasecalibrator_spw*.*")
 
 
@@ -206,6 +220,8 @@ try:
     keys_to_remove = ['freq', 'spwName', 'spwID']
     dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
 
+    logprint("Finding field_ids returned from fluxscale.", logfileout='logs/phasecal.log')
+
     for field_id in dictkeys:
         sourcename = fluxscale_result[field_id]['fieldName']
         secondary_keys = fluxscale_result[field_id].keys()
@@ -227,6 +243,8 @@ try:
                     flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
                     spws.append(int(spw_id))
 
+    logprint("Finding sources returned from fluxscale.", logfileout='logs/phasecal.log')
+
     ii = 0
     unique_sources = list(np.unique(sources))
     results = []
@@ -236,6 +254,7 @@ try:
             if (sources[ii] == source):
                 indices.append(ii)
         unique_bands = ['L']
+        band=unique_bands[0]
         lfreqs = []
         lfds = []
         lerrs = []
@@ -301,11 +320,14 @@ try:
 # take as the reference frequency the lowest one.  (this shouldn't matter,
 # in principle).
 #
+
+        logprint("Setting flux density, ref. freq, and spix", logfileout='logs/phasecal.log')
+        
         reffreq = 10.0**lfreqs[0]/1.0e9
         fluxdensity = 10.0**(aa + bb*lfreqs[0])
         spix = bb
         results.append([ source, uspws, fluxdensity, spix, SNR, reffreq ])
-        logprint(source + ' ' + band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR), logfileout='logs/phasecal.log')
+        logprint(source + ' ' + ', '+ band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR), logfileout='logs/phasecal.log')
         logprint("Frequency, data, error, and fitted data:", logfileout='logs/phasecal.log')
         for ii in range(len(lfreqs)):
             SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
@@ -405,7 +427,7 @@ applycal()
 
 logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
 
-ff= 0   # This sets the field being flagged; here it is the phase cal, field 0.
+ff= float(0)   # This sets the field being flagged; here it is the phase cal, field 0.
 
 default('flagdata')
 vis=ms_active
@@ -466,7 +488,9 @@ spwcorr=True
 action='calculate'
 s_p=flagdata()
 
-logprint ("Percentage of all data flagged after flagging in phasecal module: "+str(s_p['flagged']/s_p['total']*100)+'%', logfileout='logs/phasecal.log')
+phase_flag=s_p['flagged']/s_p['total']
+
+logprint ("Percentage of all data flagged after flagging in phasecal module: "+str(phase_flag*100)+'%', logfileout='logs/phasecal.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/phasecal.log')
@@ -642,6 +666,8 @@ try:
     keys_to_remove = ['freq', 'spwName', 'spwID']
     dictkeys = [field_id for field_id in dictkeys if field_id not in keys_to_remove]
 
+    logprint("Finding field_ids returned from fluxscale.", logfileout='logs/phasecal.log')
+
     for field_id in dictkeys:
         sourcename = fluxscale_result[field_id]['fieldName']
         secondary_keys = fluxscale_result[field_id].keys()
@@ -663,6 +689,8 @@ try:
                     flux_densities.append([float(flux_d[i]), float(flux_d_err[i])])
                     spws.append(int(spw_id))
 
+    logprint("Finding sources returned from fluxscale.", logfileout='logs/phasecal.log')
+
     ii = 0
     unique_sources = list(np.unique(sources))
     results = []
@@ -672,6 +700,7 @@ try:
             if (sources[ii] == source):
                 indices.append(ii)
         unique_bands = ['L']
+        band=unique_bands[0]  # Needs to be defined for a logprint statement.  Meaningless otherwise
         lfreqs = []
         lfds = []
         lerrs = []
@@ -737,11 +766,14 @@ try:
 # take as the reference frequency the lowest one.  (this shouldn't matter,
 # in principle).
 #
+
+        logprint("Setting flux density, ref. freq, and spix", logfileout='logs/phasecal.log')
+        
         reffreq = 10.0**lfreqs[0]/1.0e9
         fluxdensity = 10.0**(aa + bb*lfreqs[0])
         spix = bb
         results.append([ source, uspws, fluxdensity, spix, SNR, reffreq ])
-        logprint(source + ' ' + band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR), logfileout='logs/phasecal.log')
+        logprint(source + ' ' + ', '+ band + ' fitted spectral index & SNR = ' + str(spix) + ' ' + str(SNR), logfileout='logs/phasecal.log')
         logprint("Frequency, data, error, and fitted data:", logfileout='logs/phasecal.log')
         for ii in range(len(lfreqs)):
             SS = fluxdensity * (10.0**lfreqs[ii]/reffreq/1.0e9)**spix
@@ -837,20 +869,39 @@ flagbackup=False
 async=False
 applycal()
 
-
-#Clear model of phase calibrator for future runs of phasecal; has no effect on corrected column if all is okay already.
-default('delmod')
-vis=ms_active
-otf=True
-field='0'  # Hard-coded for phase calibrator
-scr=False
-delmod()
-
 # Step 10: Makes diagnostic plots for assessment
 # Look at calibration tables for phase cal (amp, phase vs. time, frequency)
 # Make images of phase cal and look at flux,beam vs. spw
 
 logprint ("Making diagnostic plots", logfileout='logs/phasecal.log')
+
+#Plot UV spectrum (averaged over all baselines & time) of phase calibrator
+default('plotms')
+vis=ms_active   
+field='0'        # Only for J0943
+xaxis='freq'
+yaxis='amp'
+xdatacolumn='corrected'
+ydatacolumn='corrected'
+averagedata=True
+avgtime='1e5'
+avgscan=True
+avgbaseline=True
+scalar=False
+spw=''
+avgspw=False
+showlegend=False
+coloraxis='spw'
+plotrange=[0.95,1.43,0,0]
+showgui=False
+clearplots=True
+plotfile='phasecal_spectrum_full.png'
+plotms()
+
+plotrange=[0.95,1.43,2.7,3.5]
+plotfile='phasecal_spectrum_zoom.png'
+plotms()
+
 
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_phasecal_flux_averaged.ms'
@@ -865,8 +916,8 @@ vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
 field='0'
-spw='0~14:200~1850'
-width='1651'
+spw='0~14:128~1920'  # Average over all channels, except the very edges
+width='1792'
 antenna=''
 timebin=''
 timerange=''
@@ -885,20 +936,15 @@ split()
 seq=range(0,15)
 for ii in seq:
     default('plotms')
-    vis=ms_active
-    field='0'       # Hard coded to J0943, phase calibrator
+    vis=output_ms  # File only contains J0943, phase calibrator data
+    field=''       
     xaxis='phase'
     yaxis='amp'
     xdatacolumn='corrected'
     ydatacolumn='corrected'
-    averagedata=True
-    #avgtime='1e5'
-    #avgscan=True
-    avgchannel='2048'  # Hard-coded for channels in each spw for CHILES 
-    avgspw=False
+    averagedata=False  # Data already averaged
     spw=str(ii)
     gridrows=1
-    #gridcolumns=
     showlegend=False
     iteraxis='spw'
     coloraxis='corr'
@@ -1007,7 +1053,7 @@ fig=pylab.figure()
 pylab.plot(seq,max_phase,'k-x')
 pylab.xlabel('Spectral Window')
 pylab.ylabel('Peak Flux [Jy]')
-pylab.yscale('log')
+#pylab.yscale('log')
 pylab.savefig('phasecal_peak.png')
 pylab.close(fig)
 
@@ -1039,17 +1085,18 @@ yaxis='phase'
 figfile='caltable_finalamp_phase.png'
 plotcal()
 
-default('plotcal')
-caltable='finalflux.gcal'
-xaxis='time'
-yaxis='amp'
-showgui=False
-figfile='caltable_finalflux_amp.png'
-plotcal()
-
-yaxis='phase'
-figfile='caltable_finalflux_phase.png'
-plotcal()
+# Removed these plots since I don't find them useful.  DJP 2/19/16
+#default('plotcal')
+#caltable='finalflux.gcal'
+#xaxis='time'
+#yaxis='amp'
+#showgui=False
+#figfile='caltable_finalflux_amp.png'
+#plotcal()
+#
+#yaxis='phase'
+#figfile='caltable_finalflux_phase.png'
+#plotcal()
 
 #Move plots, images to sub-directory
 
@@ -1075,14 +1122,16 @@ wlog.write('<li>finalamp.gcal Amp vs. Time: \n')
 wlog.write('<br><img src="plots/caltable_finalamp_amp.png"></li>\n')
 wlog.write('<li>finalamp.gcal Phase vs. Time: \n')
 wlog.write('<br><img src="plots/caltable_finalamp_phase.png"></li>\n')
-wlog.write('<li>finalflux.gcal Amp vs. Time: \n')
-wlog.write('<br><img src="plots/caltable_finalflux_amp.png"></li>\n')
-wlog.write('<li>finalflux.gcal Phase vs. Time: \n')
-wlog.write('<br><img src="plots/caltable_finalflux_phase.png"></li>\n')
+#wlog.write('<li>finalflux.gcal Amp vs. Time: \n')
+#wlog.write('<br><img src="plots/caltable_finalflux_amp.png"></li>\n')
+#wlog.write('<li>finalflux.gcal Phase vs. Time: \n')
+#wlog.write('<br><img src="plots/caltable_finalflux_phase.png"></li>\n')
 wlog.write('<li> Amp vs. Phase: \n')
 for ii in seq:
     wlog.write('<br><img src="plots/phasecal_ampphase_Spw'+str(ii)+'.png">\n')
-#    wlog.write('<br><img src="plots/phasecal_phaseuvdist_Spw'+str(ii)+'.png">\n')
+wlog.write('<li> Spectrum of Phase calibrator (both LL & RR, averaged over all time & baselines): \n')
+wlog.write('<br><img src="plots/phasecal_spectrum_full.png">\n')
+wlog.write('<br><img src="plots/phasecal_spectrum_zoom.png">\n')
 wlog.write('<li> Images of Phase Calibrator: \n')
 for ii in seq:
     wlog.write('<br><img src="plots/phasecal_spw'+str(ii)+'.png">\n')
@@ -1092,6 +1141,8 @@ wlog.write('<br><img src="plots/phasecal_beamsize.png">\n')
 wlog.write('<br><img src="plots/phasecal_peak.png">\n')
 wlog.write('<br><img src="plots/phasecal_rms.png"></li>\n')
 wlog.write('<br>\n')
+wlog.write('<br> Percentage of J0943 data flagged: '+str(phase_flag*100)+'\n')
+wlog.write('<br>')
 wlog.write('<hr>\n')
 wlog.write('</body>\n')
 wlog.write('</html>\n')

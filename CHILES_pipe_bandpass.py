@@ -15,6 +15,10 @@
 
 # 1/27/16 DJP: Set extendpols=False in RFLAG step.
 # 2/09/16 DJP: Remove interpolation settings from 1/14/16 and a bunch of the flag summaries
+# 2/11/16 DJP: Solve for all channels.  Make cloud plots with no averaging
+# 2/18/16 DJP: Make diagnostic plots with averaged, split data
+# 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
+# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.
 
 #Part I: define some variables that will be used later
 import copy
@@ -43,8 +47,8 @@ if os.path.exists('gain_curves.g'):
     rmtables(tablenames='gain_curves.g')
 if os.path.exists('initialBPinitialgain.g'):
     rmtables(tablenames='initialBPinitialgain.g')
-if os.path.exists('testdelayintiialgain.g'):
-    rmtables(tablenames='testdelayintiialgain.g')
+if os.path.exists('testdelayinitialgain.g'):
+    rmtables(tablenames='testdelayinitialgain.g')
 # Remove old images of flux calibrator
 os.system("rm -rf images/fluxcalibrator_spw*.*")
 
@@ -258,7 +262,8 @@ default('bandpass')
 vis=ms_active
 caltable='initialBPcal.b'
 field='2'            # Hard-coded to field 2 as this is always 3C286
-spw='0~14:64~1982'
+#spw='0~14:64~1982'
+spw='0~14'           # Solve BP for all channels in spectral line spws.
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'
@@ -348,8 +353,8 @@ extendpols=False
 growtime=70       
 growfreq=80       
 growaround=True      
-flagneartime=True       
-flagnearfreq=True       
+flagneartime=True   # Flag neighboring times to existing flags
+flagnearfreq=True   # Flag neighboring channels to existing flags    
 action='apply'
 display=''
 flagbackup=False   # Will backup final flagging manually.
@@ -370,7 +375,9 @@ spwcorr=True
 action='calculate'
 s_b=flagdata()
 
-logprint ("Percentage of all data flagged after flagging in BP module: "+str(s_b['flagged']/s_b['total']*100)+'%', logfileout='logs/bandpass.log')
+flux_flag=s_b['flagged']/s_b['total']
+
+logprint ("Percentage of 3C286 data flagged after flagging in BP module: "+str(flux_flag*100)+'%', logfileout='logs/bandpass.log')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/bandpass.log')
@@ -502,7 +509,8 @@ default('bandpass')
 vis=ms_active
 caltable='finalBPcal.b'
 field='2'            # Hard-coded to field 2 as this is always 3C286
-spw='0~14:64~1982'
+#spw='0~14:64~1982'
+spw='0~14'           # Solve BP for all channels in spectral line spws.
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'
@@ -605,6 +613,32 @@ interactive=False
 subplot='42'
 plotbandpass()
 
+#Plot UV spectrum (averaged over all baselines & time) of flux calibrator
+default('plotms')
+vis=ms_active   
+field='2'        # Only for 3C286
+xaxis='freq'
+yaxis='amp'
+xdatacolumn='corrected'
+ydatacolumn='corrected'
+averagedata=True
+avgtime='1e5'
+avgscan=True
+avgbaseline=True
+scalar=False
+spw=''
+avgspw=False
+showlegend=False
+coloraxis='spw'
+plotrange=[0.95,1.43,0,0]
+showgui=False
+clearplots=True
+plotfile='fluxcal_spectrum_full.png'
+plotms()
+
+plotrange=[0.95,1.43,14.5,18.5]
+plotfile='fluxcal_spectrum_zoom.png'
+plotms()
 
 
 ms_name=ms_active[:-3]
@@ -620,8 +654,8 @@ vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
 field='2'
-spw='0~14:200~1850'
-width='1651'
+spw='0~14:128~1920'    # Extend the region used for imaging/plots, only excluding the edges.
+width='1792'
 antenna=''
 timebin=''
 timerange=''
@@ -640,19 +674,15 @@ split()
 seq=range(0,15)
 for ii in seq:
     default('plotms')
-    vis=ms_active
-    field='2'       # Hard coded to 3C286, flux/bandpass calibrator
+    vis=output_ms   # Take averaged 3C286 data for diagnostic plots
+    field=''        # Only 3C286 in this MS.
     xaxis='phase'
     yaxis='amp'
     xdatacolumn='corrected'
     ydatacolumn='corrected'
-    averagedata=True
-    #avgtime='1e5'
-    #avgscan=True
-    avgchannel='2048'    # Number of channels in all spws for CHILES
+    averagedata=False     
     spw=str(ii)
     avgspw=False
-    #gridcolumns=
     showlegend=False
     iteraxis='spw'
     coloraxis='corr'
@@ -763,7 +793,7 @@ fig=pylab.figure()
 pylab.plot(seq,max_flux,'k-x')
 pylab.xlabel('Spectral Window')
 pylab.ylabel('Peak Flux [Jy]')
-pylab.yscale('log')
+#pylab.yscale('log')
 pylab.savefig('fluxcal_peak.png')
 pylab.close(fig)
 
@@ -817,12 +847,13 @@ wlog.write('<br><img src="plots/finaldelay6.png">\n')
 wlog.write('<br><img src="plots/finaldelay7.png">\n')
 wlog.write('<br><img src="plots/finaldelay8.png"></li>\n')
 wlog.write('<li> Bandpass solutions: \n')
-#wlog.write('<br><embed src="plots/bandpass.pdf"></li>\n')
 wlog.write('<br><object data="plots/bandpass.pdf" type="application/pdf" width="100%" height="100%"><p>Download <a href="plots/bandpass.pdf">bandpass.pdf</a></p></object></li>\n')
-wlog.write('<li> Amp vs. Phase (averaged over all channels): \n')
+wlog.write('<li> Amp vs. Phase (averaged over all channels in a spw): \n')
 for ii in seq:
     wlog.write('<br><img src="plots/fluxcal_ampphase_Spw'+str(ii)+'.png">\n')
-#    wlog.write('<br><img src="plots/fluxcal_phaseuvdist_Spw'+str(ii)+'.png">\n')
+wlog.write('<li> Spectrum of Flux calibrator (both LL & RR, averaged over all time & baselines): \n')
+wlog.write('<br><img src="plots/fluxcal_spectrum_full.png">\n')
+wlog.write('<br><img src="plots/fluxcal_spectrum_zoom.png">\n')
 wlog.write('<li> Images of Flux Calibrator: \n')
 for ii in seq:
     wlog.write('<br><img src="plots/fluxcal_spw'+str(ii)+'.png">\n')
@@ -832,12 +863,12 @@ wlog.write('<br><img src="plots/fluxcal_beamsize.png">\n')
 wlog.write('<br><img src="plots/fluxcal_peak.png">\n')
 wlog.write('<br><img src="plots/fluxcal_rms.png"></li>\n')
 wlog.write('<br>\n')
+wlog.write('<br> Percentage of 3C286 data flagged: '+str(flux_flag*100)+'\n')
+wlog.write('<br>')
 wlog.write('<hr>\n')
 wlog.write('</body>\n')
 wlog.write('</html>\n')
 wlog.close()
-
-
 
 logprint ("Finished CHILES_pipe_bandpass.py", logfileout='logs/bandpass.log')
 time_list=runtiming('bandpass', 'end')

@@ -31,12 +31,18 @@
 # v0.11:  Added check to apply zero flags (and remind user about online flags) when working with MS.
 #         removed multiple flagdata, mode='summary' runs and limit to specific sources.
 #         remove explicit interpolation in bandpass, applycal runs (unclear if it is useful to vary)
+# v0.12:  Updated to run under CASA 4.5.1
+# v1.0:  Fixed ff parameter for rflag runs, setting to float instead of string or integer; reimplement extend on target.
+#        Extend BP solution to all channels, but only plot average values in diagnostics.
+#        Make plot of UV spectrum for fluxcal, phasecal, and target.
+#        Make plot of fraction of flagged data on deepfield as a function of channel.
+# v1.1:  Fixed some small bugs and tweaked plots.
 
-version = "0.11"
+version = "1.1"
 svnrevision = '11nnn'
-date = "2016Feb09"
+date = "2016Feb19"
 
-print "Pipeline version "+version+" for use with CASA 4.5.0"
+print "Pipeline version "+version+" for use with CASA 4.5.1"
 import sys
 import pylab as pylab
 
@@ -44,8 +50,8 @@ import pylab as pylab
 # Check that we are using the correct version of CASA
 [major,minor,revision] = casadef.casa_version.split('.')
 casa_version = 100*int(major)+10*int(minor)+int(revision)
-if casa_version != 450:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.0")
+if casa_version != 451:
+    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.1")
 #if casa_version > 450:
 #    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.0")
 
@@ -125,13 +131,15 @@ try:
     if (os.path.exists(msname) == False):
         logprint ("Creating measurement set", logfileout='logs/initial.log')
 
+        scanlist=raw_input("If desired, enter list of subset of scans (using CASA nomenclature; leave blank for all scans): ")
+
         default('importevla')
         asdm=SDM_name
         vis=msname
         ocorr_mode='co'
         compression=False
         asis=''
-        scans=''
+        scans=scanlist
         verbose=True
         overwrite=False
         online=True         #KMH, calculate online flags when importing. 
@@ -754,7 +762,8 @@ try:
     spwcorr=True
     action='calculate'
     s_i=flagdata() # Save results to dictionary
-    logprint ("Percentage of all data flagged after initial module: "+str(s_i['flagged']/s_i['total']*100)+'%', logfileout='logs/initial.log')
+    initial_flag=s_i['flagged']/s_i['total']
+    logprint ("Percentage of all data flagged after initial module: "+str(initial_flag*100)+'%', logfileout='logs/initial.log')
     
 
 ######################################################################
@@ -780,6 +789,8 @@ try:
     wlog.write('<br><img src="./plots/antpos.png"></li>\n')
     wlog.write('<li><a href="logs/initial.log">Initial Module Log</a></li>\n')
     wlog.write('<br>\n')
+    wlog.write('<br> Percentage of data flagged: '+str(initial_flag*100)+'\n')
+    wlog.write('<br>')
     wlog.write('<hr>\n')
     wlog.write('</body>\n')
     wlog.write('</html>\n')

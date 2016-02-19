@@ -6,6 +6,11 @@
 # Removed clipping due to overflagging 12/7/15 DJP
 # Set extendpols=False in RFLAG 1/27/16 DJP
 # Included flag summary for target, and applycal for target moved here, 2/9/16 DJP
+# Removed averaging from plots, 2/11/16 DJP
+# 2/15/16 DJP: Changed ff value to a float and re-implemented "extend".
+# 2/18/16 DJP: Plot UV spectrum of field (averaging over time, baseline)
+# 2/18/16 DJP: Make diagnostic plots using averaged data.
+# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
 time_list=runtiming('target', 'start')
@@ -61,23 +66,9 @@ applycal()
 # Step 2: RFLAG with extend on deepfield
 logprint("Flag deepfield with RFLAG",logfileout='logs/target.log')
  
-
-#EM: clip the target data by pre-set values determined by XF
-#DJP, v0.7: re-instituted clipping since it does not appear to result in overflagging.  
-
-#default(flagcmd)
-#vis      = ms_active
-#inpmode  ='list'
-#inpfile  = pipepath+'flagcmd_clip_target.txt'
-#action   ='apply'
-#flagbackup= True
-#savepars=True
-#flagcmd()
-#
-#clearstat()
-
 #EM: rflag on the target source using pre set values
-ff='1'
+#DJP: changed ff from string to float.
+ff=float(1)
 
 default('flagdata')
 vis=ms_active
@@ -106,30 +97,31 @@ clearstat()
 
 #EM: extend the flags on the target only
 #DJP: commented out in v0.7
+#DJP: re-inserted for v1.0
 
-#default('flagdata')
-#vis=ms_active
-#mode='extend'
-#field='deepfield'
-#correlation=''
-#combinescans=False
-#datacolumn='corrected'
-#extendpols=False      
-#growtime=80       
-#growfreq=90       
-#growaround=True      
-#flagneartime=True       
-#flagnearfreq=True       
-#action='apply'
-#display=''
-#flagbackup=True    # Saving flags here will allow us to easily fix overflagging by EXTEND, if needed.  
-#savepars=True
-#async=False
-#flagdata()
-#
-#clearstat()
+default('flagdata')
+vis=ms_active
+mode='extend'
+field='deepfield'
+correlation=''
+combinescans=False
+datacolumn='corrected'
+extendpols=False      
+growtime=80       
+growfreq=90       
+growaround=True      
+flagneartime=True       
+flagnearfreq=True       
+action='apply'
+display=''
+flagbackup=True    # Saving flags here will allow us to easily fix overflagging by EXTEND, if needed.  
+savepars=True
+async=False
+flagdata()
 
-logprint ("Not extending flags on target", logfileout='logs/target.log')
+clearstat()
+
+logprint ("Extending flags on target", logfileout='logs/target.log')
 
 #EM: back to normal logger output
 
@@ -148,7 +140,8 @@ spwcorr=True
 action='calculate'
 s_t=flagdata()
 
-logprint ("Percentage of all data flagged after target module: "+str(s_i['flagged']/s_i['total']*100)+'%', logfileout='logs/target.log')
+target_flag=s_t['flagged']/s_t['total']
+logprint ("Percentage of all data flagged after target module: "+str(target_flag*100)+'%', logfileout='logs/target.log')
 
 
 # Save final version of flags
@@ -168,6 +161,54 @@ logprint ("Flag column saved to "+versionname, logfileout='logs/target.log')
 # Step 3: Diagnostic Plots
 logprint("Making diagnostic plots",logfileout='logs/target.log')
 
+# Make plot of percentage of data flagged as a function of channel (for both correlations combined):
+flag_frac=[]
+ct=-1
+chan=[]
+
+for s in range(15):
+    for c in range(2048):
+        ct+=1
+        chan.append(ct)
+        flagged=s_t['spw:channel'][str(s)+':'+str(c)]['flagged']
+        totals=s_t['spw:channel'][str(s)+':'+str(c)]['total']
+        flag_frac.append(flagged/totals)
+
+fig=pylab.figure()
+pylab.plot(chan,flag_frac,'k-')
+pylab.xlabel('Cumulative Channel #')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("target_flag.png")
+pylab.close(fig)
+
+#Plot UV spectrum (averaged over all baselines & time) of phase calibrator
+default('plotms')
+vis=ms_active   
+field='1'        # Only for deepfield
+xaxis='freq'
+yaxis='amp'
+xdatacolumn='corrected'
+ydatacolumn='corrected'
+averagedata=True
+avgtime='1e5'
+avgscan=True
+avgbaseline=True
+scalar=False
+spw=''
+avgspw=False
+showlegend=False
+coloraxis='spw'
+plotrange=[0.95,1.43,0,0]
+showgui=False
+clearplots=True
+plotfile='target_spectrum_full.png'
+plotms()
+
+plotrange=[0.95,1.43,-0.0001,0.015]
+plotfile='target_spectrum_zoom.png'
+plotms()
+
+
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_target_flux_averaged.ms'
 
@@ -177,8 +218,8 @@ vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
 field='deepfield'
-spw='0~14:200~1850'
-width='1651'
+spw='0~14:128~1920'  # Extend averaging to include all but 64 edge channels
+width='1792'
 antenna=''
 timebin=''
 timerange=''
@@ -197,20 +238,15 @@ split()
 seq=range(0,15)
 for ii in seq:
     default('plotms')
-    vis=ms_active
-    field='1'       # Hard coded to deepfield
+    vis=output_ms  # File only contains the deepfield
+    field=''       # Only one source present
     xaxis='uvdist'
     yaxis='amp'
     xdatacolumn='corrected'
     ydatacolumn='corrected'
-    averagedata=True
-    avgtime='1e5'
-    avgscan=True
-    #avgchannel='1e6'
-    avgspw=False
+    averagedata=False   # Data already averaged
     spw=str(ii)
     gridrows=1
-    #gridcolumns=
     showlegend=False
     iteraxis='spw'
     coloraxis='corr'
@@ -218,8 +254,6 @@ for ii in seq:
     clearplots=True
     plotfile='target_ampuvdist.png'
     plotms()
-
-
 
 seq=range(0,15)
 #Image target: 
@@ -321,7 +355,7 @@ fig=pylab.figure()
 pylab.plot(seq,max_target,'k-x')
 pylab.xlabel('Spectral Window')
 pylab.ylabel('Peak Flux [mJy]')
-pylab.yscale('log')
+#pylab.yscale('log')
 pylab.savefig('target_peak.png')
 pylab.close(fig)
 
@@ -348,7 +382,8 @@ os.system("mv target_spw*.* images")
 
 #Create webpage with results
 
-os.system("rm target.html")
+if os.path.exists("target.html"):
+    os.system("rm target.html")
 wlog = open("target.html","w")
 wlog.write('<html>\n')
 wlog.write('<head>\n')
@@ -360,18 +395,24 @@ wlog.write('<hr>\n')
 wlog.write('<center>CHILES_pipe_target results:</center>')
 wlog.write('<li> Session: '+SDM_name+'</li>\n')
 wlog.write('<li><a href="logs/target.log">Target Log</a></li>\n')
-wlog.write('<li> Amp vs. UVdist (time-averaged): \n')
+wlog.write('<li> Amp vs. UVdist (time-averaged, all channels shown): \n')
 for ii in seq:
     wlog.write('<br><img src="plots/target_ampuvdist_Spw'+str(ii)+'.png">\n')
+wlog.write('<li> Spectrum of Deepfield (both LL & RR, averaged over all time & baselines): \n')
+wlog.write('<br><img src="plots/target_spectrum_full.png">\n')
+wlog.write('<br><img src="plots/target_spectrum_zoom.png">\n')
 wlog.write('<li> Images of Deepfield: \n')
 for ii in seq:
     wlog.write('<br><img src="plots/target_spw'+str(ii)+'.png">\n')
 wlog.write('</li>')
-wlog.write('<li> Measured properties of target field: \n')
+wlog.write('<li> Measured properties of deepfield: \n')
 wlog.write('<br><img src="plots/target_beamsize.png">\n')
 wlog.write('<br><img src="plots/target_peak.png">\n')
 wlog.write('<br><img src="plots/target_rms.png"></li>\n')
 wlog.write('<br>\n')
+wlog.write('<br> Percentage of deepfield data flagged: '+str(target_flag*100)+'\n')
+wlog.write('<br><img src="plots/target_flag.png">\n')
+wlog.write('<br>')
 wlog.write('<hr>\n')
 wlog.write('</body>\n')
 wlog.write('</html>\n')
