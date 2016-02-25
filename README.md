@@ -1,9 +1,9 @@
 # chiles-pipeline
 README for CHILES Pipeline
-Feburary 19, 2016
-Version 1.1
+Feburary 25, 2016
+Version 1.2
 
-This is the first production quality version of the pipeline.  It is designed to run on CASA 4.5.1.  It can be run in Socorro at 
+This is the first production quality version of the pipeline.  It is designed to run on CASA 4.5.2.  It can be found in Socorro at 
 /lustre/aoc/projects/chiles/chiles_pipeline.
 
 The code in the new pipeline is based on the modified EVLA pipeline that was used to reduce the CHILES data in 2013 and simplified code that Ximena wrote to do bandpass calibration.  Unlike the EVLA pipeline, it is designed to run in a modular fashion with a person examining the output after each module is complete.  At present the pipeline consists of four modules:

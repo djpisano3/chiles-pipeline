@@ -37,12 +37,13 @@
 #        Make plot of UV spectrum for fluxcal, phasecal, and target.
 #        Make plot of fraction of flagged data on deepfield as a function of channel.
 # v1.1:  Fixed some small bugs and tweaked plots.
+# v1.2:  Updated code to work on CASA 4.5.2, validated results to be the same.
 
-version = "1.1"
+version = "1.2"
 svnrevision = '11nnn'
-date = "2016Feb19"
+date = "2016Feb25"
 
-print "Pipeline version "+version+" for use with CASA 4.5.1"
+print "Pipeline version "+version+" for use with CASA 4.5.2"
 import sys
 import pylab as pylab
 
@@ -50,10 +51,8 @@ import pylab as pylab
 # Check that we are using the correct version of CASA
 [major,minor,revision] = casadef.casa_version.split('.')
 casa_version = 100*int(major)+10*int(minor)+int(revision)
-if casa_version != 451:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.1")
-#if casa_version > 450:
-#    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.0")
+if casa_version != 452:
+    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.2")
 
 # Define location of pipeline
 #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
