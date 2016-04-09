@@ -19,6 +19,7 @@
 # 2/18/16 DJP: Make diagnostic plots with averaged, split data
 # 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.
+# 4/8/16 DJP: Set minsnr for calibration solution to 8.
 
 #Part I: define some variables that will be used later
 import copy
@@ -77,6 +78,9 @@ minBL_for_cal=8
 
 #Set uvrange to apply in order to optimally exclude RFI without flagging:
 uvr_cal='>1500m'
+
+#Set minsnr value to use in calibration tasks:
+snrval=8.
 
 #Reference Antenna should have already been selected:
 while bool(refAnt)==False:

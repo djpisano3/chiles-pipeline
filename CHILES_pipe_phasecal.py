@@ -16,6 +16,7 @@
 # 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
 # 2/18/16 DJP: If re-running phasecal module, need to delmod on phase calibrator.
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  Removed finalflux.gcal plot.
+# 4/8/16 DJP: Set minsnr for calibration solution to 8.
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -58,6 +59,9 @@ minBL_for_cal=8
 
 #Set uvrange to apply in order to optimally exclude RFI without flagging:
 uvr_cal='>1500m'
+
+#Set minsnr value to use in calibration tasks:
+snrval=8.
 
 #Set prior cals including gain, delay, and BP calibration
 # HG : adding the spwmap for prior cals. & adding the conditional statements for antposcal.p
@@ -106,7 +110,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
-minsnr=3.0
+minsnr=snrval
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -145,7 +149,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
-minsnr=3.0
+minsnr=snrval
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -524,7 +528,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
-minsnr=3.0
+minsnr=snrval
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -552,7 +556,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
-minsnr=3.0
+minsnr=snrval
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -587,7 +591,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
-minsnr=3.0
+minsnr=snrval
 solnorm=False
 gaintype='G'
 smodel=[]

@@ -38,12 +38,13 @@
 #        Make plot of fraction of flagged data on deepfield as a function of channel.
 # v1.1:  Fixed some small bugs and tweaked plots.
 # v1.2:  Updated code to work on CASA 4.5.2, validated results to be the same.
+# v1.3:  Code includes minimum SNR setting for calibration solutions, includes the "testcubes" module, and is updated to run on CASA 4.6
 
-version = "1.2"
+version = "1.3"
 svnrevision = '11nnn'
-date = "2016Feb25"
+date = "2016Apr08"
 
-print "Pipeline version "+version+" for use with CASA 4.5.2"
+print "Pipeline version "+version+" for use with CASA 4.6"
 import sys
 import pylab as pylab
 
@@ -51,8 +52,8 @@ import pylab as pylab
 # Check that we are using the correct version of CASA
 [major,minor,revision] = casadef.casa_version.split('.')
 casa_version = 100*int(major)+10*int(minor)+int(revision)
-if casa_version != 452:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.5.2")
+if casa_version != 460:
+    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.6")
 
 # Define location of pipeline
 #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
@@ -174,7 +175,7 @@ try:
         hanningsmooth()
         myHanning="n"
 
-        logprint ("Hanning smoothing finished, myHanning parameter reset to 'n' to avoid further smoothing on restarts", logfileout='logs/hanning.log')
+        logprint ("Hanning smoothing finished, myHanning parameter reset to 'n' to avoid further smoothing on restarts", logfileout='logs/initial.log')
     else:
         logprint ("NOT Hanning smoothing the data", logfileout='logs/initial.log')
 
@@ -538,7 +539,7 @@ try:
         logprint("Bands/basebands/spws are:", logfileout='logs/initial.log')
         for spw_info in spws_info:
             spw_info_string = spw_info[0] + '   ' + spw_info[1] + '   [' + ','.join(["%d" % ii for ii in spw_info[2]]) + ']   [' + ','.join(["%d" % ii for ii in spw_info[3]]) + ']'
-            logprint(spw_info_string, logfileout='logs/msinfo.log')
+            logprint(spw_info_string, logfileout='logs/initial.log')
 # Critical fraction of flagged solutions in delay cal to avoid an
 # entire baseband being flagged on all antennas
         critfrac=0.9/float(len(spws_info))
