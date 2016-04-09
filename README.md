@@ -37,13 +37,7 @@ Detailed description of CHILES pipeline scripts:
 
 	•	CHILES_pipe_target.py: This module is extremely simple. It runs an applycal for the deepfield and then it runs flagdata with rflag and extend  using the fixed parameters determined by Ximena and Emmanuel to do a final automated flagging of the data.  We explicitly set extendpols=False for RFLAG.  The target data is then split off to form a continuum image, which is imaged and the beamsize, peak flux, and rms is measured for every spectral window.  Plots of amplitude vs. uvdistance and frequency are generated for the deepfield along with a plot of the fraction of flagged data vs. channel.  The results are presented on another webpage (target.html) for perusal.  At this point, the user should be able to go in and manually flag the target knowing that the calibration is good.  This task does not need to be re-run. 
 
-	•	CHILES_pipe_testcube.py: The last module makes two small cubes centered on the bright 
-10 mJy continuum source and the brightest HI detection at low-z.  Both cubes span the entire 32000 
-channel range covered by the observation, but are only 64x64 pixels in area.  After both cubes are made, 
-then a spectrum is extracted covering the full spectral range towards the 10 mJy, and two integrated 
-around the bright HI detection (one spanning the full spectral range and the other zoomed in on the 
-detection). A webpage containing these spectra is generated at the end.  This module only needs to be
-re-run if additional flagging is done by hand and new test cubes are required.  
+	•	CHILES_pipe_testcube.py: The last module makes two small cubes centered on the bright 10 mJy continuum source and the brightest HI detection at low-z.  Both cubes span the entire 32000 channel range covered by the observation, but are only 64x64 pixels in area.  After both cubes are made, then a spectrum is extracted covering the full spectral range towards the 10 mJy, and two integrated around the bright HI detection (one spanning the full spectral range and the other zoomed in on the detection). A webpage containing these spectra is generated at the end.  This module only needs to be re-run if additional flagging is done by hand and new test cubes are required.  
 	
 
 To run this code locally (or in Socorro), the path to the pipeline and to the weblogs from the NRAO pipeline have to be added to (or uncommented) in the CHILES_pipeline_initial.py module.
