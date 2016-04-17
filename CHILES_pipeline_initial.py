@@ -39,14 +39,19 @@
 # v1.1:  Fixed some small bugs and tweaked plots.
 # v1.2:  Updated code to work on CASA 4.5.2, validated results to be the same.
 # v1.3:  Code includes minimum SNR setting for calibration solutions, includes the "testcubes" module, and is updated to run on CASA 4.6
+# v1.3.1:  Fixed code to account for new mode of hanningsmooth using fix from Emmanuel Momjian.
 
-version = "1.3"
+version = "1.3.1"
 svnrevision = '11nnn'
-date = "2016Apr08"
+date = "2016Apr15"
 
 print "Pipeline version "+version+" for use with CASA 4.6"
 import sys
 import pylab as pylab
+# include additional packages for hanningsmooth
+import shutil
+import glob
+import os
 
 
 # Check that we are using the correct version of CASA
@@ -171,13 +176,20 @@ try:
         default('hanningsmooth')
         vis=msname
         datacolumn='data'
-        outputvis=''
+        outputvis='temphanning.ms'
         hanningsmooth()
         myHanning="n"
 
+        logprint ("Copying xml files to the output ms")
+        for file in glob.glob(msname+'/*.xml'):
+                shutil.copy2(file , 'temphanning.ms/')
+        logprint ("Removing original VIS '+msname, logfileout='logs/initial.log")
+        shutil.rmtree(msname)
+        logprint('Renaming temphanning.ms to '+msname, logfileout='logs/initial.log')
+        os.rename('temphanning.ms', msname)
         logprint ("Hanning smoothing finished, myHanning parameter reset to 'n' to avoid further smoothing on restarts", logfileout='logs/initial.log')
     else:
-        logprint ("NOT Hanning smoothing the data", logfileout='logs/initial.log')
+        logprint ("NOT Hanning smoothing the data, keeping original ms unchanged", logfileout='logs/initial.log')
 
 ######################################################################
 
