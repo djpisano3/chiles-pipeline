@@ -1,7 +1,7 @@
 # chiles-pipeline
 README for CHILES Pipeline
-April 8, 2016
-Version 1.3
+April 17, 2016
+Version 1.3.1
 
 This is the the second production quality version of the pipeline.  It is designed to run on CASA 4.6.  It can be found in Socorro at /lustre/aoc/projects/chiles/chiles_pipeline.
 
