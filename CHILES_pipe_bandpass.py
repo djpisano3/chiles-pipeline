@@ -20,6 +20,9 @@
 # 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.
 # 4/8/16 DJP: Set minsnr for calibration solution to 8.
+# 6/9/16 DJP: Forgot to copy snrval to minsnr parameters, fixed.  Need to add option for user to specify snrval.
+# 6/16/16 DJP: Removing images of flux calibrator from diagnostic plots.
+# 6/22/16 DJP: including amp/phase vs. time plots and leaving minsnr at default values.
 
 #Part I: define some variables that will be used later
 import copy
@@ -73,14 +76,12 @@ for ispw in range(numSpws):
 
 tst_bpass_spw=tst_delay_spw
 
-#Set minimum # of baselines need for a solution to 8, based on experience
+# The following parameters are set in the initial pipeline script by default or user input.
+##Set minimum # of baselines need for a solution to 8, based on experience
 minBL_for_cal=8
-
-#Set uvrange to apply in order to optimally exclude RFI without flagging:
+#
+##Set uvrange to apply in order to optimally exclude RFI without flagging:
 uvr_cal='>1500m'
-
-#Set minsnr value to use in calibration tasks:
-snrval=8.
 
 #Reference Antenna should have already been selected:
 while bool(refAnt)==False:
@@ -488,7 +489,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant=minBL_for_cal
-minsnr=3.0
+minsnr=5.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -695,6 +696,29 @@ for ii in seq:
     plotfile='fluxcal_ampphase.png'
     plotms()
 
+# Use plotms to make plot of amplitude and phase vs. time, for each spw.  
+for ii in seq:
+    default('plotms')
+    vis=output_ms  # File only contains 3C286, flux calibrator data
+    field=''       
+    xaxis='time'
+    yaxis='amp'
+    xdatacolumn='corrected'
+    ydatacolumn='corrected'
+    averagedata=False  # Data already averaged
+    spw=str(ii)
+    gridrows=1
+    showlegend=False
+    iteraxis='spw'
+    coloraxis='corr'
+    showgui=False
+    clearplots=True
+    plotfile='fluxcal_amptime.png'
+    plotms()
+    yaxis='phase'
+    plotfile='fluxcal_phasetime.png'
+    plotms()
+
 seq=range(0,15)
 #19: 
 for ii in seq:
@@ -810,11 +834,12 @@ pylab.savefig('fluxcal_rms.png')
 pylab.close(fig)
 
 #Want to plot image of flux calibrator in each spw.  Use "imview"
+#Dropping this from diagnostic plots
 
-for ii in seq:
-    image_fluxcal='fluxcalibrator_spw'+str(ii)+'.image'
-    kntr_levels=[-2*rms_flux[ii]/1000.,2*rms_flux[ii]/1000.,0.1*max_flux[ii],0.3*max_flux[ii],0.5*max_flux[ii],0.7*max_flux[ii],0.9*max_flux[ii]]
-    imview(raster={'file':image_fluxcal,'scaling':-4, 'colorwedge':True},contour={'file':image_fluxcal,'levels':kntr_levels},out='fluxcal_spw'+str(ii)+'.png')
+#for ii in seq:
+#    image_fluxcal='fluxcalibrator_spw'+str(ii)+'.image'
+#    kntr_levels=[-2*rms_flux[ii]/1000.,2*rms_flux[ii]/1000.,0.1*max_flux[ii],0.3*max_flux[ii],0.5*max_flux[ii],0.7*max_flux[ii],0.9*max_flux[ii]]
+#    imview(raster={'file':image_fluxcal,'scaling':-4, 'colorwedge':True},contour={'file':image_fluxcal,'levels':kntr_levels},out='fluxcal_spw'+str(ii)+'.png')
 
 
 #Move plots, images to sub-directory
@@ -858,9 +883,10 @@ for ii in seq:
 wlog.write('<li> Spectrum of Flux calibrator (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_zoom.png">\n')
-wlog.write('<li> Images of Flux Calibrator: \n')
+wlog.write('<li> Amp. & Phase vs. time for Flux Calibrator (averaged over frequency): \n')
 for ii in seq:
-    wlog.write('<br><img src="plots/fluxcal_spw'+str(ii)+'.png">\n')
+    wlog.write('<br><img src="plots/fluxcal_amptime_Spw'+str(ii)+'.png">\n')
+    wlog.write('<br><img src="plots/fluxcal_phasetime_Spw'+str(ii)+'.png">\n')
 wlog.write('</li>')
 wlog.write('<li> Measured properties of flux calibrator: \n')
 wlog.write('<br><img src="plots/fluxcal_beamsize.png">\n')

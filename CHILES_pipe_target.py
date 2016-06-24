@@ -11,6 +11,7 @@
 # 2/18/16 DJP: Plot UV spectrum of field (averaging over time, baseline)
 # 2/18/16 DJP: Make diagnostic plots using averaged data.
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  
+# 5/29/16 DJP: Including time/frequency averaging on the target after initial rflag, but before extend.
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
 time_list=runtiming('target', 'start')

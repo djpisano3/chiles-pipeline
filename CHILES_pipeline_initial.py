@@ -40,10 +40,14 @@
 # v1.2:  Updated code to work on CASA 4.5.2, validated results to be the same.
 # v1.3:  Code includes minimum SNR setting for calibration solutions, includes the "testcubes" module, and is updated to run on CASA 4.6
 # v1.3.1:  Fixed code to account for new mode of hanningsmooth using fix from Emmanuel Momjian.
+# v1.4:    Update path to work on Epoch 3 data.  
+# v1.4.1:  Fix error with snrval, and allow uvmin, minBL_for_cal, and snrval to be set by user. Updated diagnostic plots.
+# v1.5:  Revert minsnr to original pipeline settings.  Remove user input of these values.  Including amp/phase vs. time plots for phase/flux calib.
+#        Will be adding time/frequency averaging for flagging the target (but not yet).
 
-version = "1.3.1"
+version = "1.5"
 svnrevision = '11nnn'
-date = "2016Apr15"
+date = "2016Jun24"
 
 print "Pipeline version "+version+" for use with CASA 4.6"
 import sys
@@ -69,6 +73,11 @@ pipepath='/data/dpisano/CHILES/chiles_pipeline/'
 nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
 #nrao_weblog_path='/lustre/aoc/projects/chiles/weblogs/'
 
+# To find the path to the weblog index.html file for the NRAO pipeline run:
+def find(name,path):
+    for root,dirs,files in os.walk(path):
+        if name in files:
+            return os.path.join(root,name)
 
 #This is the default time-stamped casa log file, in case we
 #    need to return to it at any point in the script
@@ -125,11 +134,34 @@ execfile(pipepath+'CHILES_pipe_startup.py')
 time_list=runtiming('startup', 'end')
 pipeline_save()
 
+weblog_file=find('index.html',nrao_weblog_path+SDM_name)
+
 try:
 
 ######################################################################
 
     time_list=runtiming('initial', 'start')
+
+# Query user to set snrval, minBL_for_cal, and uvmin (all for calibration solutions)
+    
+#Set minimum # of baselines need for a solution to 8, based on experience
+#    minBL_for_cal=raw_input("What is the minimum number of baselines required for a calibration solution (default=8; hit return for default): ")
+#    if minBL_for_cal=='':
+#        minBL_for_cal=int(8)
+#    else:
+#        minBL_for_cal=int(minBL_for_cal)
+#
+##Set uvrange to apply in order to optimally exclude RFI without flagging:
+#    uvr_cal=raw_input("What should the minimum uvrange be for a calibration solution (default='>1500m'; hit return for default): ")
+#    if uvr_cal=='':
+#        uvr_cal='>1500m'
+#
+##Set minsnr value to use in calibration tasks:
+#    snrval=raw_input("What is the minimum SNR needed to solve for calibration (default=8; hit return for default): ")
+#    if snrval=='':
+#        snrval=float(8.)
+#    else:
+#        snrval=float(snrval)
 
 # IMPORT THE DATA TO CASA
 
@@ -498,7 +530,7 @@ try:
     numAntenna = len(nameAntenna)
     tbLoc.close()
 
-    minBL_for_cal=max(3,int(numAntenna/2.0))
+#    minBL_for_cal=max(3,int(numAntenna/2.0))
 
 # Set 3C84 variables so the pipeline doesn't complain later:
     cal3C84_d = False
@@ -796,7 +828,7 @@ try:
     wlog.write('<br>\n')
     wlog.write('<hr>\n')
     wlog.write('<li> Session: '+SDM_name+'\n')
-    wlog.write('<li><a href="'+nrao_weblog_path+SDM_name+'/index.html">NRAO continuum pipeline weblog</a></li>\n')
+    wlog.write('<li><a href="'+weblog_file+'">NRAO continuum pipeline weblog</a></li>\n')
     wlog.write('<li>Antenna positions: \n')
     wlog.write('<br><img src="./plots/antpos.png"></li>\n')
     wlog.write('<li><a href="logs/initial.log">Initial Module Log</a></li>\n')

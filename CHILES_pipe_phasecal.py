@@ -17,6 +17,8 @@
 # 2/18/16 DJP: If re-running phasecal module, need to delmod on phase calibrator.
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  Removed finalflux.gcal plot.
 # 4/8/16 DJP: Set minsnr for calibration solution to 8.
+# 6/16/16 DJP: Removing images from phase calibrator from diagnostic plots, but including Amp/Phase vs. time.
+# 6/22/16 DJP:  Setting minsnr to original pipeline values.
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -54,14 +56,12 @@ if os.path.exists('finalflux.gcal'):
 os.system("rm -rf images/phasecalibrator_spw*.*")
 
 
-#Set minimum # of baselines need for a solution to 8, based on experience
+# The following parameters are set in the initial pipeline script by default or user input.
+##Set minimum # of baselines need for a solution to 8, based on experience
 minBL_for_cal=8
 
-#Set uvrange to apply in order to optimally exclude RFI without flagging:
+##Set uvrange to apply in order to optimally exclude RFI without flagging:
 uvr_cal='>1500m'
-
-#Set minsnr value to use in calibration tasks:
-snrval=8.
 
 #Set prior cals including gain, delay, and BP calibration
 # HG : adding the spwmap for prior cals. & adding the conditional statements for antposcal.p
@@ -111,6 +111,7 @@ refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
 minsnr=snrval
+#minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -150,6 +151,7 @@ refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
 minsnr=snrval
+#minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -529,6 +531,7 @@ refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
 minsnr=snrval
+#minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -557,6 +560,7 @@ refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
 minsnr=snrval
+#minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -592,6 +596,7 @@ refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant= minBL_for_cal
 minsnr=snrval
+#minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -957,6 +962,29 @@ for ii in seq:
     plotfile='phasecal_ampphase.png'
     plotms()
 
+# Use plotms to make plot of amplitude and phase vs. time, for each spw.  
+for ii in seq:
+    default('plotms')
+    vis=output_ms  # File only contains J0943, phase calibrator data
+    field=''       
+    xaxis='time'
+    yaxis='amp'
+    xdatacolumn='corrected'
+    ydatacolumn='corrected'
+    averagedata=False  # Data already averaged
+    spw=str(ii)
+    gridrows=1
+    showlegend=False
+    iteraxis='spw'
+    coloraxis='corr'
+    showgui=False
+    clearplots=True
+    plotfile='phasecal_amptime.png'
+    plotms()
+    yaxis='phase'
+    plotfile='phasecal_phasetime.png'
+    plotms()
+
 seq=range(0,15)
 #Image phase cal: 
 for ii in seq:
@@ -1069,12 +1097,12 @@ pylab.yscale('log')
 pylab.savefig('phasecal_rms.png')
 pylab.close(fig)
 
-#Want to plot image of flux calibrator in each spw.  Use "imview"
-
-for ii in seq:
-    image_phasecal='phasecalibrator_spw'+str(ii)+'.image'
-    kntr_levels=[-2*rms_phase[ii]/1000.,2*rms_phase[ii]/1000.,0.1*max_phase[ii],0.3*max_phase[ii],0.5*max_phase[ii],0.7*max_phase[ii],0.9*max_phase[ii]]
-    imview(raster={'file':image_phasecal,'scaling':-3, 'colorwedge':True},contour={'file':image_phasecal,'levels':kntr_levels},out='phasecal_spw'+str(ii)+'.png')
+#Want to plot image of phase calibrator in each spw.  Use "imview"
+# Dropping figures of phase calibrator, leaving in diagnostic plots.
+#for ii in seq:
+#    image_phasecal='phasecalibrator_spw'+str(ii)+'.image'
+#    kntr_levels=[-2*rms_phase[ii]/1000.,2*rms_phase[ii]/1000.,0.1*max_phase[ii],0.3*max_phase[ii],0.5*max_phase[ii],0.7*max_phase[ii],0.9*max_phase[ii]]
+#    imview(raster={'file':image_phasecal,'scaling':-3, 'colorwedge':True},contour={'file':image_phasecal,'levels':kntr_levels},out='phasecal_spw'+str(ii)+'.png')
 
 #Plot calibration tables
 default('plotcal')
@@ -1136,9 +1164,10 @@ for ii in seq:
 wlog.write('<li> Spectrum of Phase calibrator (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/phasecal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/phasecal_spectrum_zoom.png">\n')
-wlog.write('<li> Images of Phase Calibrator: \n')
+wlog.write('<li> Amp. & Phase vs. time for Phase Calibrator (averaged over frequency): \n')
 for ii in seq:
-    wlog.write('<br><img src="plots/phasecal_spw'+str(ii)+'.png">\n')
+    wlog.write('<br><img src="plots/phasecal_amptime_Spw'+str(ii)+'.png">\n')
+    wlog.write('<br><img src="plots/phasecal_phasetime_Spw'+str(ii)+'.png">\n')
 wlog.write('</li>')
 wlog.write('<li> Measured properties of phase calibrator: \n')
 wlog.write('<br><img src="plots/phasecal_beamsize.png">\n')
