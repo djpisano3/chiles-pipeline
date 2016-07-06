@@ -43,11 +43,11 @@
 # v1.4:    Update path to work on Epoch 3 data.  
 # v1.4.1:  Fix error with snrval, and allow uvmin, minBL_for_cal, and snrval to be set by user. Updated diagnostic plots.
 # v1.5:  Revert minsnr to original pipeline settings.  Remove user input of these values.  Including amp/phase vs. time plots for phase/flux calib.
-#        Will be adding time/frequency averaging for flagging the target (but not yet).
+# v1.6:  Including new extend values for target plus time averaged rflag.  testcubes module does a split with time/frequency averaging before imaging.
 
-version = "1.5"
+version = "1.6"
 svnrevision = '11nnn'
-date = "2016Jun24"
+date = "2016Jul06"
 
 print "Pipeline version "+version+" for use with CASA 4.6"
 import sys

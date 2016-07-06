@@ -3,6 +3,8 @@
 # small test cubes to verify that the pipeline calibration and flagging is of
 # sufficient quality.  
 # 3/3/16 DJP
+# 6/28/16, DJP:  Reducing number of iterations to 100 from 1000.  
+#                Testing splitting data first.  
 
 logprint ("Starting CHILES_pipe_testcubes.py", logfileout='logs/testcubes.log')
 time_list=runtiming('testcubes', 'start')
@@ -15,6 +17,24 @@ import pylab as pylab
 import re as re
 import sys
 
+# Test if imaging is quicker after  averaging by 2x in time & 4x in frequency
+outputms=ms_active[:-3]+'_calibrated_deepfield.ms'
+targetfile=outputms
+
+logprint ('Split calibrated deepfield uv data', logfileout='logs/testcubes.log')
+
+default('split')
+vis=ms_active
+datacolumn='corrected'
+outputvis=targetfile
+field='deepfield'
+spw ='0~14'
+width=4
+timebin='16s'
+split()
+
+ms_active=outputms
+
 # Make test cube of 10 mJy source, all channels
 logprint ('Make cube of 10 mJy source, all channels', logfileout='logs/testcubes.log')
 default('clean')
@@ -24,7 +44,7 @@ phasecenter='J2000 10h01m31.4 +02d26m40'
 grid_mode=''
 number_w=1
 image_size=[64,64]
-iteration=1000
+iteration=100
 mask_name=['']
 vis=ms_active
 imagename=image_name
@@ -68,7 +88,7 @@ phasecenter='J2000 10h01m15.2 +02d18m24'
 grid_mode=''
 number_w=1
 image_size=[64,64]
-iteration=1000
+iteration=100
 mask_name=['']
 vis=ms_active
 imagename=image_name
