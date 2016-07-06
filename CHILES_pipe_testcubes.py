@@ -172,7 +172,7 @@ pylab.close(fig)
 
 #Move plots, images to sub-directory
 os.system("mv *.png plots")
-os.system("mv target_*.* images")
+os.system("mv targetcube*.* images")
 
 #Make output webpage
 if os.path.exists("testcubes.html"):
