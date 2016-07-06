@@ -76,7 +76,7 @@ freqnoavg=0.4
 timenoavg=0.5
 scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
 scaling=np.asarray(scaling1)
-sigmacut=3.0
+sigmacut=4.0
 freqd1noavg=scaling*freqnoavg*sigmacut
 timed1noavg=scaling*timenoavg*sigmacut
 
@@ -142,7 +142,7 @@ timeavg=9.2e-6
 
 scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
 scaling=np.asarray(scaling1)
-sigmacut=4.0
+sigmacut=3.0
 freqd1avg=scaling*freqavg*sigmacut
 timed1avg=scaling*timeavg*sigmacut
 
