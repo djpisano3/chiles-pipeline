@@ -64,147 +64,19 @@ likely have to restart CASA when re-running modules.
 
 Detailed description of CHILES pipeline scripts:
 
-	•	CHILES_pipeline_initial.py: This script does all of 
-the pipeline setup and those tasks that do not need to be repeated 
-or lack user input.  It begins by defining the path for the 
-pipeline and the location of the weblogs from the EVLA continuum 
-pipeline that is automatically run on all data.  It sets up the 
-CASA log and the timing log and then runs CHILES_pipe_startup (see 
-the next bullet for its description).  At this point, if needed, it 
-reads in the SDM file and creates a measurement set (MS).  The user 
-may specify a subset of scans to import if desired.  Online 
-flagging and zero flagging is done when importing the SDM.  If a MS 
-exists, zero flagging is done and the user is reminded that the 
-online flags need to be applied.  If Hanning smoothing is requested 
-by the user, it then smooths the data.  If Hanning smoothing is 
-requested by the user, it then smooths the data.  It then runs 
-"listobs" to produce a listing that describes the entire data set.  
-The code then automatically identifies all the spws, fields 
-observed, observing intents, and number of antennas.  The 
-integration time is hardcoded in this section as it remains at 8s 
-for all CHILES observations.  The CASA version of the AIPS task 
-PRTAN is run to help the user select a reference antenna.  The code 
-then does all flagging that does not require user input (or doesn't 
-need to be repeated later).  This includes flagging antennas 
-identified as bad by the user, flagging the continuum spws, those 
-data that are exactly zero, and shadowed data.  The data is then 
-quacked and all flags are applied and saved.  The script concludes 
-by producing a webpage (initial.html) that has the logs, the PRTAN 
-output, and a link to the EVLA pipeline weblogs.  This script is 
-based on the initial code from Ximena's bandpass script as well as 
-the initial data processing in the EVLA pipeline. 
+	•	CHILES_pipeline_initial.py: This script does all of the pipeline setup and those tasks that do not need to be repeated or lack user input.  It begins by defining the path for the pipeline and the location of the weblogs from the EVLA continuum pipeline that is automatically run on all data.  It sets up the CASA log and the timing log and then runs CHILES_pipe_startup (see the next bullet for its description).  At this point, if needed, it reads in the SDM file and creates a measurement set (MS).  The user may specify a subset of scans to import if desired.  Online flagging and zero flagging is done when importing the SDM.  If a MS exists, zero flagging is done and the user is reminded that the online flags need to be applied.  If Hanning smoothing is requested by the user, it then smooths the data.  If Hanning smoothing is requested by the user, it then smooths the data.  It then runs "listobs" to produce a listing that describes the entire data set.  The code then automatically identifies all the spws, fields observed, observing intents, and number of antennas.  The integration time is hardcoded in this section as it remains at 8s for all CHILES observations.  The CASA version of the AIPS task PRTAN is run to help the user select a reference antenna.  The code then does all flagging that does not require user input (or doesn't need to be repeated later).  This includes flagging antennas identified as bad by the user, flagging the continuum spws, those data that are exactly zero, and shadowed data.  The data is then quacked and all flags are applied and saved.  The script concludes by producing a webpage (initial.html) that has the logs, the PRTAN output, and a link to the EVLA pipeline weblogs.  This script is based on the initial code from Ximena's bandpass script as well as the initial data processing in the EVLA pipeline. 
 
-	•	CHILES_pipe_startup.py: This script is designed to 
-setup the pipeline as it begins.  It takes user input for the name 
-of the SDM file.  If a MS has already been created, it will 
-identify that file and skip creating a new MS file.  It will ask 
-the user to identify any bad antennas that should be flagged in all 
-the data, and it will ask the user to identify a reference antenna; 
-a list of antennas can be provided.  If the user does not know 
-which antenna should be a reference antenna, this step can be 
-skipped and the user will be prompted again later in the pipeline.  
-The user can provide a ranked list of reference antennas so that if 
-the primary antenna is flagged, the pipeline will select the next 
-listed antenna as a reference.  Otherwise, the CASA code has its 
-own algorithm for identifying alternate reference antennas that may 
-not be optimal for our purposes.  Most of this script comes from 
-the EVLA_pipe_startup.py script. 
+	•	CHILES_pipe_startup.py: This script is designed to setup the pipeline as it begins.  It takes user input for the name of the SDM file.  If a MS has already been created, it will identify that file and skip creating a new MS file.  It will ask the user to identify any bad antennas that should be flagged in all the data, and it will ask the user to identify a reference antenna; a list of antennas can be provided.  If the user does not know which antenna should be a reference antenna, this step can be skipped and the user will be prompted again later in the pipeline.  The user can provide a ranked list of reference antennas so that if the primary antenna is flagged, the pipeline will select the next listed antenna as a reference.  Otherwise, the CASA code has its own algorithm for identifying alternate reference antennas that may not be optimal for our purposes.  Most of this script comes from the EVLA_pipe_startup.py script. 
 
-	•	CHILES_pipe_bandpass.py: This script starts by 
-removing any past calibration tables (including results from past 
-'setjy' runs using 'delmod') and defining variables containing the 
-spectral windows and channels to be used for the calibration.  The 
-main body of the script then runs 'setjy' for 3C286.  Calibration 
-tables for the gain curves and the antenna positions are created 
-with gencal.  Then the initial gain (phases only) and delay 
-calibrations are done to be used for the initial bandpass 
-calibration. The bandpass (BP) calibration is done with fillgaps=0 
-so no interpolation.  These calibrations are then applied (using 
-default linear interpolation in time, frequency) before flagdata is 
-run twice, once with mode='rflag' and then with mode='extend' using 
-fixed parameters.  At this point, the initial gain (phase only) and 
-delay calibrations are repeated before a final bandpass calibration 
-is done.  For delay calibration, only the central 33% of the 
-channels are used, while all other calibration uses all but the 
-outer 50 channels.  To assist with removing RFI from the 
-calibration data, we also set a uvrange='>1500m' to exclude the 
-worst RFI on short baselines and the minimum number of baselines 
-for a solution is set to 8.  To get a solution a minimum SNR of 3 
-is required for all calibration tasks, except the bandpass 
-calibration, which requires 5.  The calibration is then applied to 
-3C286 and the amplitude vs. phase is plotted for the fluxcalibrator 
-along with a time-averaged and baseline-averaged spectrum.  3C286 
-is then imaged and the beamsize, peak flux, and rms are measured.  
-The flags are backed up after the applycal.  The results are 
-plotted up and embedded into a webpage (bandpass.html) for the user 
-to examine.  Most of this script is based on the code written by 
-Ximena to test bandpass calibration techniques.  If the bandpass 
-solutions are not good enough, the user can manually flag the 3C286 
-data or the solutions and re-run this module. 
+	•	CHILES_pipe_bandpass.py: This script starts by removing any past calibration tables (including results from past 'setjy' runs using 'delmod') and defining variables containing the spectral windows and channels to be used for the calibration.  The main body of the script then runs 'setjy' for 3C286.  Calibration tables for the gain curves and the antenna positions are created with gencal.  Then the initial gain (phases only) and delay calibrations are done to be used for the initial bandpass calibration. The bandpass (BP) calibration is done with fillgaps=0 so no interpolation.  These calibrations are then applied (using default linear interpolation in time, frequency) before flagdata is run twice, once with mode='rflag' and then with mode='extend' using fixed parameters.  At this point, the initial gain (phase only) and delay calibrations are repeated before a final bandpass calibration is done.  For delay calibration, only the central 33% of the channels are used, while all other calibration uses all but the outer 50 channels.  To assist with removing RFI from the calibration data, we also set a uvrange='>1500m' to exclude the worst RFI on short baselines and the minimum number of baselines for a solution is set to 8.  To get a solution a minimum SNR of 3 is required for all calibration tasks, except the bandpass calibration, which requires 5.  The calibration is then applied to 3C286 and the amplitude vs. phase is plotted for the fluxcalibrator along with a time-averaged and baseline-averaged spectrum.  3C286 is then imaged and the beamsize, peak flux, and rms are measured.  The flags are backed up after the applycal.  The results are plotted up and embedded into a webpage (bandpass.html) for the user to examine.  Most of this script is based on the code written by Ximena to test bandpass calibration techniques.  If the bandpass solutions are not good enough, the user can manually flag the 3C286 data or the solutions and re-run this module. 
 
-	•	CHILES_pipe_phasecal.py: The script begins by 
-removing old calibration tables and old images of the phase 
-calibrator (if the task was previously run).  The same uvrange and 
-minimum number of baselines needed for a solution from the bandpass 
-module are used here as well.  To get a solution a minimum SNR of 8 
-is required for all calibration tasks.  All but the 50 edge 
-channels are used for the gain solutions.  The first stage is to do 
-a full complex gain (amplitude and phases) for both 3C286 and the 
-phase calibrator (J0943-0819).  The solution interval is chosen to 
-be the scan length to maximize signal-to-noise.  The flux scaling 
-is then done using the code from the EVLA_pipe_fluxboot script 
-boot-strapping the flux scale from 3C286 to J0943.  All of the 
-final calibrations (antpos, gain_curves, delay, bandpass) and the 
-initial gain and bootstrapping solutions are applied and flagdata 
-is run twice with fixed parameters: once with rflag and once with 
-extend.  Both extendflags and extendpols are explicitly set to 
-False for RFLAG+Extend.  The complex gain and boot-strapped fluxes 
-are then re-derived after the flagging to produce the final 
-solutions, which are applied to both calibrators.  Delmod is run 
-(on field='0') before the second 'setjy' and after the final 
-applycal is run to avoid 'setjy' appending values to the existing 
-models.  The flags are backed up after the phase solutions are 
-applied in applycal.  The same calibration plots as in bandpass are 
-generated and put on a webpage (phasecal.html) for the user to 
-inspect.  If the calibrations are not sufficiently good, the user 
-can manually flag J0943 and re-run these calibrations.  There 
-should be no need to flag 3C286 again. 
+	•	CHILES_pipe_phasecal.py: The script begins by removing old calibration tables and old images of the phase calibrator (if the task was previously run).  The same uvrange and minimum number of baselines needed for a solution from the bandpass module are used here as well.  To get a solution a minimum SNR of 8 is required for all calibration tasks.  All but the 50 edge channels are used for the gain solutions.  The first stage is to do a full complex gain (amplitude and phases) for both 3C286 and the phase calibrator (J0943-0819).  The solution interval is chosen to be the scan length to maximize signal-to-noise.  The flux scaling is then done using the code from the EVLA_pipe_fluxboot script boot-strapping the flux scale from 3C286 to J0943.  All of the final calibrations (antpos, gain_curves, delay, bandpass) and the initial gain and bootstrapping solutions are applied and flagdata is run twice with fixed parameters: once with rflag and once with extend.  Both extendflags and extendpols are explicitly set to False for RFLAG+Extend.  The complex gain and boot-strapped fluxes are then re-derived after the flagging to produce the final solutions, which are applied to both calibrators.  Delmod is run (on field='0') before the second 'setjy' and after the final applycal is run to avoid 'setjy' appending values to the existing models.  The flags are backed up after the phase solutions are applied in applycal.  The same calibration plots as in bandpass are generated and put on a webpage (phasecal.html) for the user to inspect.  If the calibrations are not sufficiently good, the user can manually flag J0943 and re-run these calibrations.  There should be no need to flag 3C286 again. 
 
-	•	CHILES_pipe_target.py: This module is extremely 
-simple. It runs an applycal for the deepfield and then it runs 
-flagdata with rflag and extend using the best parameters determined 
-by testing to do an initial automated flagging of the data.  After 
-the extend, we run a time-averaged rflag using the best parameters 
-from tests to do the final flagging of the target data.  We 
-explicitly set extendpols=False for RFLAG.  The flags are backed up 
-at this point.  The target data is then split off to form a 
-continuum image, which is imaged and the beamsize, peak flux, and 
-rms is measured for every spectral window.  Plots of amplitude vs. 
-uvdistance and frequency are generated for the deepfield along with 
-a plot of the fraction of flagged data vs. channel.  The results 
-are presented on another webpage (target.html) for perusal.  At 
-this point, the user should be able to go in and manually flag the 
-target knowing that the calibration is good.  This task does not 
-need to be re-run. 
+	•	CHILES_pipe_target.py: This module is extremely simple. It runs an applycal for the deepfield and then it runs flagdata with rflag and extend using the best parameters determined by testing to do an initial automated flagging of the data.  After the extend, we run a time-averaged rflag using the best parameters from tests to do the final flagging of the target data.  We explicitly set extendpols=False for RFLAG.  The flags are backed up at this point.  The target data is then split off to form a continuum image, which is imaged and the beamsize, peak flux, and rms is measured for every spectral window.  Plots of amplitude vs. uvdistance and frequency are generated for the deepfield along with a plot of the fraction of flagged data vs. channel.  The results are presented on another webpage (target.html) for perusal.  At this point, the user should be able to go in and manually flag the target knowing that the calibration is good.  This task does not need to be re-run. 
 
-	•	CHILES_pipe_testcube.py: This module starts by 
-splitting off the data for the deepfield for each spectral window, 
-averaging it by a factor of 2x in time and 4x in frequency.  It 
-then uses this split data to make small cubes for each spw centered 
-on the bright 10 mJy continuum source and the brightest HI 
-detection at low-z.  Both cubes span the entire 2048 channel range 
-covered by each spw in the observation, but are only 64x64 pixels 
-in area.  After both cubes are made, then a spectrum is extracted 
-covering the full spectral range towards the 10 mJy, and two 
-integrated around the bright HI detection (one spanning the full 
-spectral range and the other zoomed in on the detection). A webpage 
-containing these spectra is generated at the end.  This module only 
-needs to be re-run if additional flagging is done by hand and new 
-test cubes are required.  
+	•	CHILES_pipe_testcube.py: This module starts by splitting off the data for the deepfield for each spectral window, averaging it by a factor of 2x in time and 4x in frequency.  It then uses this split data to make small cubes for each spw centered on the bright 10 mJy continuum source and the brightest HI detection at low-z.  Both cubes span the entire 2048 channel range covered by each spw in the observation, but are only 64x64 pixels in area.  After both cubes are made, then a spectrum is extracted covering the full spectral range towards the 10 mJy, and two integrated around the bright HI detection (one spanning the full spectral range and the other zoomed in on the detection). A webpage containing these spectra is generated at the end.  This module only needs to be re-run if additional flagging is done by hand and new test cubes are required.  
 
-	•	CHILES_pipe_split.py: This last module splits off
-the deepfield data with averaging (2x in time, 4x in frequency).  
-	
+	•	CHILES_pipe_split.py: This last module splits offthe deepfield data with averaging (2x in time, 4x in frequency).  	
 
 To run this code locally (or in Socorro), the path to the pipeline 
 and to the weblogs from the NRAO pipeline have to be added to (or 
