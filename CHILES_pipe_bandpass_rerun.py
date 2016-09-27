@@ -1,29 +1,11 @@
-# CHILES_pipe_bandpass.py
-# This module of the CHILES pipeline does the delay and bandpass correction
-# on the data as well as the flux calibration.  It is heavily based on the code 
-# written by Ximena Fernandez, and not on the NRAO continuum pipeline. 
-# 8/27/15 DJP
+# CHILES_pipe_bandpass_rerun.py
+# This module of the CHILES pipeline redoes the delay and bandpass correction
+# on the data as well as the flux calibration.  It is a stripped down version of
+# the bandpass module.
+# 9/21/16 DJP
 
-#Need to run CHILES_pipe_restore.py first, if not immediately following CHILES_pipeline_initial.py
+#Need to run CHILES_pipe_restore.py first
 #8/31/15 DJP
-
-# HG made a number of changes to make sure that the caltable lists and spw selection
-# were done correctly.  I explicitly removed all prior caltables.  12/7/15 DJP
-
-# 1/14/16, DJP: Set fillgaps=10 with interp='linear,spline' in bandpass (probably no effect)
-#               Set interp=',spline' for BPcal tables for frequency interpolation.
-
-# 1/27/16 DJP: Set extendpols=False in RFLAG step.
-# 2/09/16 DJP: Remove interpolation settings from 1/14/16 and a bunch of the flag summaries
-# 2/11/16 DJP: Solve for all channels.  Make cloud plots with no averaging
-# 2/18/16 DJP: Make diagnostic plots with averaged, split data
-# 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
-# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.
-# 4/8/16 DJP: Set minsnr for calibration solution to 8.
-# 6/9/16 DJP: Forgot to copy snrval to minsnr parameters, fixed.  Need to add option for user to specify snrval.
-# 6/16/16 DJP: Removing images of flux calibrator from diagnostic plots.
-# 6/22/16 DJP: including amp/phase vs. time plots and leaving minsnr at default values.
-# 9/21/16 DJP:  Changed channel range for tst_bpass_spw (only excluding 50 edge channels).  Moved flagmanager to end.
 
 #Part I: define some variables that will be used later
 import copy
@@ -32,7 +14,7 @@ import pylab as pylab
 import re as re
 import sys
 
-logprint ("Starting CHILES_pipe_bandpass.py", logfileout='logs/bandpass.log')
+logprint ("Starting CHILES_pipe_bandpass_rerun.py", logfileout='logs/bandpass.log')
 time_list=runtiming('bandpass', 'start')
 
 #Clean up calibration tables from past runs:
@@ -148,236 +130,6 @@ if os.path.exists('antposcal.p')==True:  # HG (12/04/2015) : include antposcal.p
   priorcals.append('antposcal.p')
   priorspwmap.append([])
 
-
-#--------------------------------------------------------------------
-#Part III: initial bandpass calibration + rflag
-logprint ("Initial delay, gain, BP calibration", logfileout='logs/bandpass.log')
-
-#4: Gain calibration on delay calibrator, TABLE: testdelayinitialgain.g
-default('gaincal')
-vis=ms_active
-caltable='testdelayinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-spw=tst_delay_spw
-intent=''
-selectdata=False
-solint='int'
-combine='scan'
-preavg=-1.0
-refant=refAnt
-uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
-minblperant= minBL_for_cal
-minsnr=3.0
-solnorm=False
-gaintype='G'
-smodel=[]
-calmode='p'
-append=False
-docallib=False
-gaintable=priorcals
-gainfield=['']
-interp=['']
-spwmap=[]
-parang=False
-async=False  # Not deprecated
-gaincal()
-
-GainTables=copy.copy(priorcals)
-GainTables.append('testdelayinitialgain.g')
-
-#Delay calibration to all spws. TABLE: initialdelay.k
-default('gaincal')
-vis=ms_active
-caltable='initialdelay.k'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-spw=''
-intent=''
-selectdata=False
-uvrange=''           # No uvrange for delay calibration, since it exclude antennas.
-solint='inf'
-combine='scan'
-preavg=-1.0
-refant=refAnt
-minblperant=minBL_for_cal
-minsnr=3.0
-solnorm=False
-gaintype='K'
-smodel=[]
-calmode='p'
-append=False
-gaintable=GainTables
-gainfield=['']
-interp=['']
-spwmap=[]
-opacity=[]
-parang=False
-async=False
-gaincal()
-
-#specify spw14 to apply delays from there
-
-spwac=14
-spwmapdelayarray=pl.zeros(15,int)
-spwmapdelayarray[0:15]=spwac
-spwmapdelay=list(spwmapdelayarray)
-
-GainTables=copy.copy(priorcals)
-GainTables.append('initialdelay.k')
-SpwMapValues=copy.copy(priorspwmap)
-SpwMapValues.append(spwmapdelay)
-
-
-#5: This second gaincal applies the delays of spw 14? TABLE:initialBPinitialgain.g
-default('gaincal')
-vis=ms_active
-caltable='initialBPinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-spw=tst_bpass_spw
-selectdata=False
-solint='int'
-combine='scan'
-preavg=-1.0
-refant=refAnt
-uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
-minblperant=minBL_for_cal
-minsnr=3.0
-solnorm=False
-gaintype='G'
-smodel=[]
-calmode='p'
-append=False
-gaintable=GainTables
-gainfield=['']
-interp=['']
-spwmap=SpwMapValues
-opacity=[]
-parang=False
-async=False
-gaincal()
-
-BPGainTables=copy.copy(GainTables)            # HG (12/04/2015) : simplifying steps for gaintables and spwmaps
-BPGainTables.append('initialBPinitialgain.g')
-BPSpwMapValues=copy.copy(SpwMapValues)
-BPSpwMapValues.append([])
-
-#6: Bandpass solution: TABLE: initialBPcal.b
-default('bandpass')
-vis=ms_active
-caltable='initialBPcal.b'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-#spw='0~14:64~1982'
-spw='0~14'           # Solve BP for all channels in spectral line spws.
-selectdata=True
-uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
-solint='inf'
-combine='scan'
-refant=refAnt
-minblperant=minBL_for_cal
-minsnr=5.0
-solnorm=False       # Must be set to False otherwise solution doesn't apply BP to flagged channels
-bandtype='B'
-fillgaps=0          # Skip interpolation, set to 0.
-interp=['']          # Default is linear interpolation in time, frequency.
-append=False
-gaintable=BPGainTables
-gainfield=['']
-spwmap=BPSpwMapValues
-gaincurve=False
-opacity=[]
-parang=False
-bandpass()
-
-
-AllCalTables=copy.copy(GainTables)           # HG (12/04/2015) : simplifying steps for gaintables and spwmaps
-AllCalTables.append('initialBPcal.b')
-AllCalTables.append('initialBPinitialgain.g')
-AllSpwMapValues=copy.copy(SpwMapValues)
-AllSpwMapValues.append([])
-AllSpwMapValues.append([])
-
-#7: #Apply calibrations to the flux calibrator:
-default('applycal')
-vis=ms_active
-field='2'            # Hard-coded to field 2 as this is always 3C286
-spw=''
-intent=''
-selectdata=True
-gaintable=AllCalTables
-interp=['','','','','']         # Default is to interpolate linearly in time & frequency.
-spwmap=AllSpwMapValues
-gaincurve=False
-opacity=[]
-parang=False
-calwt=False
-flagbackup=False
-async=False
-applycal()
-
-#8: First rflag run 
-logprint ("RFLAG+Extend on flux calibrator", logfileout='logs/bandpass.log')
-
-f=ms.msseltoindex(vis=ms_active,field='1331*')['field']
-ff= float(f[0])
-
-default('flagdata')
-vis=ms_active
-mode='rflag'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-spw='0~14'
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendflags=False    # Explicitly set to False since default is True.  Extending on next step. 
-extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
-winsize=3
-freqdev=[[ff,0.0,7.1],[ff,1.0,5.5],[ff,2.0,4.5],[ff,3.0,4.1],[ff,4.0,3.9],[ff,5.0,3.7],[ff,6.0,3.6],[ff,7.0,3.7],[ff,8.0,3.3],[ff,9.0,3.0],[ff,10.0,3.0],[ff,11.0,3.0],[ff,12.0,2.9],[ff,13.0,3.0],[ff,14.0,3.0]]
-timedev=[[ff,0.0,9.4],[ff,1.0,7.3],[ff,2.0,5.9],[ff,3.0,5.4],[ff,4.0,5.2],[ff,5.0,4.9],[ff,6.0,4.8],[ff,7.0,4.9],[ff,8.0,4.4],[ff,9.0,4.0],[ff,10.0,3.9],[ff,11.0,3.9],[ff,12.0,3.9],[ff,13.0,4.0],[ff,14.0,4.0]]
-timedevscale=1.0
-freqdevscale=1.0
-action='apply'
-display=''
-flagbackup=False
-savepars=True
-flagdata()
-
-#9:
-default('flagdata')
-vis=ms_active
-mode='extend'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendpols=False      
-growtime=70       
-growfreq=80       
-growaround=True      
-flagneartime=True   # Flag neighboring times to existing flags
-flagnearfreq=True   # Flag neighboring channels to existing flags    
-action='apply'
-display=''
-flagbackup=False   # Will backup final flagging manually.
-savepars=True
-flagdata()
-
-# Summary of flagging, after RFLAG+extend (for testing purposes only)
-logprint ("Summary of flags after RFLAG+extend", logfileout='logs/bandpass.log')
-default('flagdata')
-vis=ms_active
-field='2'       # Only flagging 3C286, so don't need stats on other sources.
-mode='summary'
-spw='0~14'
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-s_b=flagdata()
-
-flux_flag=s_b['flagged']/s_b['total']
-
-logprint ("Percentage of 3C286 data flagged after flagging in BP module: "+str(flux_flag*100)+'%', logfileout='logs/bandpass.log')
 
 #--------------------------------------------------------------------
 #Part IV: second round of bandpass calibration
@@ -892,7 +644,7 @@ wlog.write('</body>\n')
 wlog.write('</html>\n')
 wlog.close()
 
-logprint ("Finished CHILES_pipe_bandpass.py", logfileout='logs/bandpass.log')
+logprint ("Finished CHILES_pipe_bandpass_rerun.py", logfileout='logs/bandpass.log')
 time_list=runtiming('bandpass', 'end')
 
 pipeline_save()

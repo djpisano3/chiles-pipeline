@@ -44,10 +44,13 @@
 # v1.4.1:  Fix error with snrval, and allow uvmin, minBL_for_cal, and snrval to be set by user. Updated diagnostic plots.
 # v1.5:  Revert minsnr to original pipeline settings.  Remove user input of these values.  Including amp/phase vs. time plots for phase/flux calib.
 # v1.6:  Including new extend values for target plus time averaged rflag.  testcubes module does a split with time/frequency averaging before imaging.
+# v1.6.1: Removed async parameter from tasks where deprecated.
+# v2.0:  Fixed bug in target, changed plots to Amp vs. channel.  Moved around "flagmanager" commands.  Fixed tst_bpass_spw & tst_gain_spw.
+#        Updated imaging in testcubes 
 
-version = "1.6"
+version = "2.0"
 svnrevision = '11nnn'
-date = "2016Jul06"
+date = "2016Sep26"
 
 print "Pipeline version "+version+" for use with CASA 4.6"
 import sys
@@ -673,7 +676,6 @@ try:
         action='apply'
         flagbackup=False
         savepars=False
-        async=False
         flagdata()
         clearstat()
         logprint ("Bad antenna Flagging completed", logfileout='logs/initial.log')
@@ -689,7 +691,6 @@ try:
     mode ='manual'
     spw =contspw
     action ='apply'
-    async=False
     flagbackup=False
     flagdata()
     
@@ -720,7 +721,6 @@ try:
         action='apply'
         flagbackup=False
         savepars=False
-        async=False
         outfile=outputflagfile
         myzeroflags = flagdata()
         clearstat()
@@ -737,7 +737,6 @@ try:
     #action='apply'
     #flagbackup=False
     #savepars=False
-    #async=False
     #flagdata()
     #clearstat()
     #logprint ("Shadow flags carried out", logfileout='logs/initial.log')
@@ -771,7 +770,6 @@ try:
     flagbackup=False
     savepars=True
     cmdreason=string.join(cmdreason_list, ',')
-    async=False
     flagdata()
     clearstat()
     
@@ -791,7 +789,6 @@ try:
     versionname='initialflags'
     comment='Deterministic flags saved after application'
     merge='replace'
-    async=False
     flagmanager()
     logprint ("Flag column saved to "+versionname, logfileout='logs/initial.log')
     

@@ -13,6 +13,7 @@
 # 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  
 # 6/28/16 DJP: Including time/frequency averaging on the target after initial rflag and extend.
 # 7/1/16 DJP:  Including time-averaged RFLAG and using parameters determined by XF.  Setting rflag scale=3, growtime=60.  
+# 9/21/16 DJP:  Fixed variable names for time-averaged RFLAG.  
 
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
@@ -100,7 +101,6 @@ action='apply'
 display=''
 flagbackup=False
 savepars=True
-async=False
 flagdata()
 
 clearstat()
@@ -125,7 +125,6 @@ action='apply'
 display=''
 flagbackup=False    
 savepars=False
-async=False
 flagdata()
 
 clearstat()
@@ -136,15 +135,15 @@ logprint ("Time-averaged flagging on target", logfileout='logs/target.log')
 
 # Using parameters determined by XF.  Set sigma clip level at 3.0x the noise level
 
-freqavg=0.08
-timeavg=9.2e-6
+freqavgval=0.08
+timeavgval=9.2e-6
 
 
 scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
 scaling=np.asarray(scaling1)
 sigmacut=3.0
-freqd1avg=scaling*freqavg*sigmacut
-timed1avg=scaling*timeavg*sigmacut
+freqd1avg=scaling*freqavgval*sigmacut
+timed1avg=scaling*timeavgval*sigmacut
 
 default('flagdata')
 vis=ms_active
@@ -167,7 +166,6 @@ timebin='1000s'
 action='apply'
 flagbackup=False
 savepars=True
-async=False
 flagdata()
 
 clearstat()
@@ -202,7 +200,6 @@ mode='save'
 versionname='finalflags'
 comment='Final flags saved after calibrations and target rflag+extend'
 merge='replace'
-async=False
 flagmanager()
 logprint ("Flag column saved to "+versionname, logfileout='logs/target.log')
 
@@ -230,7 +227,7 @@ pylab.ylabel('Fraction of data flagged')
 pylab.savefig("target_flag.png")
 pylab.close(fig)
 
-#Plot UV spectrum (averaged over all baselines & time) of phase calibrator
+#Plot UV spectrum (averaged over all baselines & time) of target
 default('plotms')
 vis=ms_active   
 field='1'        # Only for deepfield
@@ -257,17 +254,39 @@ plotrange=[0.95,1.43,-0.0001,0.015]
 plotfile='target_spectrum_zoom.png'
 plotms()
 
+# Use plotms to make plot of amplitude vs. channel, divided by spw
+seq=range(0,15)
+for ii in seq:
+    default('plotms')
+    vis=ms_active  # Use standard MS
+    field='1'       # Only for deepfield
+    xaxis='channel'
+    yaxis='amp'
+    xdatacolumn='corrected'
+    ydatacolumn='corrected'
+    averagedata=True
+    avgtime='1e5'
+    avgscan=True   
+    spw=str(ii)
+    gridrows=1
+    showlegend=False
+    iteraxis='spw'
+    coloraxis='corr'
+    showgui=False
+    clearplots=True
+    plotfile='target_ampchannel.png'
+    plotms()
 
+#Split the target.
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_target_flux_averaged.ms'
 
-#Split the target.
 default('split')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
 field='deepfield'
-spw='0~14:128~1920'  # Extend averaging to include all but 64 edge channels
+spw='0~14:128~1920'  # Extend averaging to include all but 128 edge channels
 width='1792'
 antenna=''
 timebin=''
@@ -280,29 +299,7 @@ correlation=''
 observation=''
 keepflags=False
 keepmms=False
-async=False
 split()
-
-# Use plotms to make plot of amplitude vs. uvdist, divided by spw
-seq=range(0,15)
-for ii in seq:
-    default('plotms')
-    vis=output_ms  # File only contains the deepfield
-    field=''       # Only one source present
-    xaxis='uvdist'
-    yaxis='amp'
-    xdatacolumn='corrected'
-    ydatacolumn='corrected'
-    averagedata=False   # Data already averaged
-    spw=str(ii)
-    gridrows=1
-    showlegend=False
-    iteraxis='spw'
-    coloraxis='corr'
-    showgui=False
-    clearplots=True
-    plotfile='target_ampuvdist.png'
-    plotms()
 
 seq=range(0,15)
 #Image target: 
@@ -444,9 +441,9 @@ wlog.write('<hr>\n')
 wlog.write('<center>CHILES_pipe_target results:</center>')
 wlog.write('<li> Session: '+SDM_name+'</li>\n')
 wlog.write('<li><a href="logs/target.log">Target Log</a></li>\n')
-wlog.write('<li> Amp vs. UVdist (time-averaged, all channels shown): \n')
+wlog.write('<li> Amp vs. Channel (time-averaged, all channels shown): \n')
 for ii in seq:
-    wlog.write('<br><img src="plots/target_ampuvdist_Spw'+str(ii)+'.png">\n')
+    wlog.write('<br><img src="plots/target_ampchannel_Spw'+str(ii)+'.png">\n')
 wlog.write('<li> Spectrum of Deepfield (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/target_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/target_spectrum_zoom.png">\n')

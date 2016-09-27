@@ -1,27 +1,8 @@
-# CHILES_pipe_phasecal.py
-# This module of the CHILES pipeline follows the "bandpass" module using the BP 
-# and flux calibration from that task to solve for the complex gain (amp & phase)
-# as a function of time using the phase calibrator.  This will involve doing an
-# initial solution, running an RFLAG with extend, then getting a final solution
-# ready to apply to the observations of the deepfield itself.
-# 9/7/15 DJP
-# HG fixed a number of bugs and explicitly sets caltable and spw lists correctly.
-# 12/7/15 DJP
-# 1/27/16 DJP: Set extendpols=False in RFLAG step.
-# 2/9/16 DJP: Removed many flag summaries, limit to phase calibrator.
-# 2/9/16 DJP: Moved applycal for target to "target" module.
-# 2/11/16 DJP: Make cloud plots without any averaging.
-# 2/15/16 DJP: Changed ff value to a float.
-# 2/18/16 DJP: Make diagnostic plots with averaged, split data
-# 2/18/16 DJP: Make plot of amp v. frequency for 3C286 averaged over time & baseline from UV data.
-# 2/18/16 DJP: If re-running phasecal module, need to delmod on phase calibrator.
-# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  Removed finalflux.gcal plot.
-# 4/8/16 DJP: Set minsnr for calibration solution to 8.
-# 6/16/16 DJP: Removing images from phase calibrator from diagnostic plots, but including Amp/Phase vs. time.
-# 6/22/16 DJP:  Setting minsnr to original pipeline values.
-# 9/21/16 DJP:  Changed channel range for tst_gain_spw (only excluding 50 edge channels).  Moved flagmanager to end.
+# CHILES_pipe_phasecal_rerun.py
+# This module of the CHILES pipeline reruns the phasecal module
+# 9/21/16 DJP
 
-logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
+logprint ("Starting CHILES_pipe_phasecal_rerun.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
 
 # Step 1:  Set default parameters (to match previous modules), and clean up old files:
@@ -428,72 +409,6 @@ flagbackup=False
 async=False
 applycal()
 
-# Step 6: run RFLAG and extend
-
-logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
-
-ff= float(0)   # This sets the field being flagged; here it is the phase cal, field 0.
-
-default('flagdata')
-vis=ms_active
-mode='rflag'
-field='0'            # Hard-coded to field 0 as this is always phase cal
-spw='0~14'
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendflags=False    # Explicitly set to False as default is True.  Extend is explicitly done later.  
-extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
-winsize=3
-# The following noise levels are taken from tests by XF.
-freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]
-timedev=[[ff,0.0,8.0],[ff,1.0,6.2],[ff,2.0,5.1],[ff,3.0,4.6],[ff,4.0,4.4],[ff,5.0,4.2],[ff,6.0,4.1],[ff,7.0,4.2],[ff,8.0,3.7],[ff,9.0,3.4],[ff,10.0,3.3],[ff,11.0,3.4],[ff,12.0,3.3],[ff,13.0,3.4],[ff,14.0,3.4]]
-timedevscale=1.0
-freqdevscale=1.0
-action='apply'
-display=''
-flagbackup=False
-savepars=True
-flagdata()
-
-# Extend flags
-default('flagdata')
-vis=ms_active
-mode='extend'
-field='0'            # Hard-coded to field 0 as this is always phase cal
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendpols=False      
-growtime=70       
-growfreq=80       
-growaround=True      
-flagneartime=True       
-flagnearfreq=True       
-action='apply'
-display=''
-flagbackup=True
-savepars=True
-flagdata()
-
-# Summary of flagging, after RFLAG+extend (for testing purposes only)
-logprint ("Summary of flags after RFLAG+extend", logfileout='logs/phasecal.log')
-default('flagdata')
-vis=ms_active
-mode='summary'
-spw='0~14'
-field='0'     # Only phase calibrator getting flagged so only source to check.
-correlation='RR,LL'
-spwchan=True
-spwcorr=True
-action='calculate'
-s_p=flagdata()
-
-phase_flag=s_p['flagged']/s_p['total']
-
-logprint ("Percentage of all data flagged after flagging in phasecal module: "+str(phase_flag*100)+'%', logfileout='logs/phasecal.log')
 
 # Step 7: repeat gaincal 
 # Short solint = "int" (length of individual calibrator scan)
@@ -1174,7 +1089,7 @@ wlog.write('</html>\n')
 wlog.close()
 
 
-logprint ("Finished CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
+logprint ("Finished CHILES_pipe_phasecal_rerun.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'end')
 
 pipeline_save()
