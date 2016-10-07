@@ -876,9 +876,11 @@ wlog.write('<li> Spectrum of Flux calibrator (both LL & RR, averaged over all ti
 wlog.write('<br><img src="plots/fluxcal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_zoom.png">\n')
 wlog.write('<li> Amp. & Phase vs. time for Flux Calibrator (averaged over frequency): \n')
+wlog.write('<table> \n')
 for ii in seq:
-    wlog.write('<br><img src="plots/fluxcal_amptime_Spw'+str(ii)+'.png">\n')
-    wlog.write('<br><img src="plots/fluxcal_phasetime_Spw'+str(ii)+'.png">\n')
+    wlog.write('<tr><td><img src="plots/fluxcal_amptime_Spw'+str(ii)+'.png"></td>\n')
+    wlog.write('<td><img src="plots/fluxcal_phasetime_Spw'+str(ii)+'.png"></td></tr>\n')
+wlog.write('</table> \n')
 wlog.write('</li>')
 wlog.write('<li> Measured properties of flux calibrator: \n')
 wlog.write('<br><img src="plots/fluxcal_beamsize.png">\n')

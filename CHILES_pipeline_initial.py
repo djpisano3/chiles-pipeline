@@ -47,12 +47,13 @@
 # v1.6.1: Removed async parameter from tasks where deprecated.
 # v2.0:  Fixed bug in target, changed plots to Amp vs. channel.  Moved around "flagmanager" commands.  Fixed tst_bpass_spw & tst_gain_spw.
 #        Updated imaging in testcubes 
+# v2.1:  Update to CASA 4.7, fixed small changes
 
-version = "2.0"
+version = "2.1"
 svnrevision = '11nnn'
-date = "2016Sep26"
+date = "2016Oct06"
 
-print "Pipeline version "+version+" for use with CASA 4.6"
+print "Pipeline version "+version+" for use with CASA 4.7"
 import sys
 import pylab as pylab
 # include additional packages for hanningsmooth
@@ -63,9 +64,9 @@ import os
 
 # Check that we are using the correct version of CASA
 [major,minor,revision] = casadef.casa_version.split('.')
-casa_version = 100*int(major)+10*int(minor)+int(revision)
-if casa_version != 460:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.6")
+casa_version = 100*int(major)+10*int(minor)+int(revision[0])
+if casa_version != 470:
+    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.7")
 
 # Define location of pipeline
 #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'

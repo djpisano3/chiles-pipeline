@@ -1,10 +1,10 @@
 # chiles-pipeline
 README for CHILES Pipeline
-September 26, 2016
-Version 2.0
+October 7, 2016
+Version 2.1
 
 This is the production quality version of the pipeline.  It is
-designed to run on CASA 4.6.  It can be found in Socorro at 
+designed to run on CASA 4.7.  It can be found in Socorro at 
 /lustre/aoc/projects/chiles/chiles_pipeline.
 
 The code in the new pipeline is based on the modified EVLA pipeline 
@@ -76,7 +76,7 @@ Detailed description of CHILES pipeline scripts:
 
 	•	CHILES_pipe_testcube.py: This module starts by splitting off the data for the deepfield for each spectral window, averaging it by a factor of 2x in time and 4x in frequency.  It then uses this split data to make small cubes for each spw centered on the bright 10 mJy continuum source and the brightest HI detection at low-z.  Both cubes span the entire 2048 channel range covered by each spw in the observation, but are only 64x64 pixels in area.  After both cubes are made, then a spectrum is extracted covering the full spectral range towards the 10 mJy, and two integrated around the bright HI detection (one spanning the full spectral range and the other zoomed in on the detection). A webpage containing these spectra is generated at the end.  This module only needs to be re-run if additional flagging is done by hand and new test cubes are required.  
 
-	•	CHILES_pipe_split.py: This last module splits offthe deepfield data with averaging (2x in time, 4x in frequency).  	
+	•	CHILES_pipe_split.py: This last module splits offthe deepfield data with averaging (2x in time, 4x in frequency).  It copies this MS plus the output from the final flagmanager, the flag commands, and all the calibration tables to the FINAL subdirectory.  
 
 To run this code locally (or in Socorro), the path to the pipeline 
 and to the weblogs from the NRAO pipeline have to be added to (or 
