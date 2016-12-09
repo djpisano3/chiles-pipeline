@@ -20,6 +20,7 @@
 # 6/16/16 DJP: Removing images from phase calibrator from diagnostic plots, but including Amp/Phase vs. time.
 # 6/22/16 DJP:  Setting minsnr to original pipeline values.
 # 9/21/16 DJP:  Changed channel range for tst_gain_spw (only excluding 50 edge channels).  Moved flagmanager to end.
+# 10/28/16 DJP: Added backup of finalamp.gcal
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -811,6 +812,9 @@ AllCalTables.append('finalflux.gcal')
 AllSpwMapValues=copy.copy(SpwMapValues)
 AllSpwMapValues.append([])
 AllSpwMapValues.append([])
+
+# Backup finalamp.gcal table
+os.system('cp finalamp.gcal finalamp_backup.gcal')
 
 # HG: set gainfield appropriately depending if antposcal.p exists or not.  
 if os.path.exists('antposcal.p')==True:  

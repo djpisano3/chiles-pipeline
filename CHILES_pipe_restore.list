@@ -224,3 +224,6 @@ flux1
 freq2
 flux2
 priorspwmap
+nu0
+dnu
+sigma
