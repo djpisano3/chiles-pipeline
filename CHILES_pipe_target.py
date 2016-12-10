@@ -192,13 +192,14 @@ s_t=flagdata()
 
 
 target_flag=s_t['flagged']/s_t['total']
-logprint ("Percentage of all data flagged after RFLAG+Extend+time-avg RFLAG: "+str(target_flag*100)+'%', logfileout='logs/target.log')
+logprint ("Percentage of all data flagged after RFLAG+Extend+time-avg RFLAG: "+str(target_flag*100)+"%", logfileout='logs/target.log')
 
 # Flagging any channel that is already more than 90% flagged.  
 limFlag=0.9
 flagChannels=[]
-for a in s_t[‘spw:channel']:
-    if  (s_t[‘spw:channel'][a]['flagged’]/s_t[‘spw:channel'][a]['total'])>limFlag:
+for a in s_t['spw:channel']:
+    fp=s_t['spw:channel'][a]['flagged']/s_t['spw:channel'][a]['total']
+    if  fp>limFlag:
         flagChannels.append(a)
 strChan = ','.join(flagChannels)
 
