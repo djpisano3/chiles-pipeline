@@ -38,16 +38,6 @@ target_flag=s_t['flagged']/s_t['total']
 
 logprint ("Final percentage of all data flagged: "+str(target_flag*100)+'%', logfileout='logs/split.log')
 
-# Make updated plot of fraction of data flagged.
-fig=pylab.figure()
-pylab.plot(freq,flag_frac,'k-')
-pylab.xlim(940.,1445.)
-pylab.xlabel('Frequency [MHz]')
-pylab.ylabel('Fraction of data flagged')
-pylab.savefig("finaltarget_flag.png")
-pylab.close(fig)
-
-
 # Save final version of flags
 logprint("Saving flags before split",logfileout='logs/target.log')
 
@@ -84,6 +74,16 @@ for s in range(15):
         flagged.append(s_t['spw:channel'][str(s)+':'+str(c)]['flagged'])
         totals.append(s_t['spw:channel'][str(s)+':'+str(c)]['total'])
         flag_frac.append(flagged[ct]/totals[ct])
+
+# Make updated plot of fraction of data flagged.
+fig=pylab.figure()
+pylab.plot(freq,flag_frac,'k-')
+pylab.xlim(940.,1445.)
+pylab.xlabel('Frequency [MHz]')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("finaltarget_flag.png")
+pylab.close(fig)
+
 
 # Write flagging statistics to file
 flagstatname=msname.rstrip('ms') + 'flag_stats.txt'
