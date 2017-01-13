@@ -24,7 +24,8 @@
 # 6/16/16 DJP: Removing images of flux calibrator from diagnostic plots.
 # 6/22/16 DJP: including amp/phase vs. time plots and leaving minsnr at default values.
 # 9/21/16 DJP:  Changed channel range for tst_bpass_spw (only excluding 50 edge channels).  Moved flagmanager to end.
-# 10/28/16 DJP: Added backup of finalBPcal.b
+# 10/28/16 DJP: Added backup of finalBPcal.b, (1/21/17 DJP: fixed bug)
+# 1/10/17 DJP: Delete individual png bandpass plots as information is already in bandpass.pdf
 
 #Part I: define some variables that will be used later
 import copy
@@ -547,7 +548,7 @@ applycal()
 
 # Backup finalBPcal table
 
-os.system('cp finalBPcal.b finalBPcal_backup.b')
+os.system('cp -r finalBPcal.b finalBPcal_backup.b')
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/bandpass.log')
@@ -841,6 +842,7 @@ pylab.close(fig)
 
 #Move plots, images to sub-directory
 
+os.systen*"rm -rf bandpass.ea*.png")
 os.system("mv *.png plots")
 os.system("mv bandpass.pdf plots")
 if os.path.exists('images')==False:

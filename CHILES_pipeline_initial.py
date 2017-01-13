@@ -50,10 +50,11 @@
 # v2.1:  Update to CASA 4.7, fixed small bugs
 # v2.2:  Allow cubes to be made even if missing spws in testcubes.  Flagged channels that are already 90% flagged.  Updated some plots in target module
 #        Saving final flagging statistics vs. frequency for final reference.  
+# v2.2.1:  Small changes with file management.  
 
-version = "2.2"
+version = "2.2.1"
 svnrevision = '11nnn'
-date = "2016Dec09"
+date = "2017Jan10"
 
 print "Pipeline version "+version+" for use with CASA 4.7"
 import sys

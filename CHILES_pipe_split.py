@@ -2,6 +2,7 @@
 # This module is run after the user is satisfied with the results of the CHILES 
 # pipeline.
 # 9/21/16 DJP
+# 1/10/17 DJP: Include html, logs, and plots in FINAL directory
 
 logprint ("Starting CHILES_pipe_split.py", logfileout='logs/split.log')
 time_list=runtiming('split', 'start')
@@ -161,7 +162,16 @@ wlog.write('</body>\n')
 wlog.write('</html>\n')
 wlog.close()
 
+# Copy html files and plots to FINAL directory
+os.system("cp -r *html FINAL/.")
+os.system("cp -r plots FINAL/.")
+# Save variable values
+os.system("cp -r CHILES_pipe_restore.list FINAL/.")
+
 logprint ("Finished CHILES_pipe_split.py", logfileout='logs/split.log')
 time_list=runtiming('split', 'end')
 
 pipeline_save()
+
+# Copy logs to FINAL directory (needs to be after final "save" to preserve all information
+os.system("cp -r logs FINAL/.")
