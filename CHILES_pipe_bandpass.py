@@ -842,7 +842,7 @@ pylab.close(fig)
 
 #Move plots, images to sub-directory
 
-os.systen*"rm -rf bandpass.ea*.png")
+os.systen("rm -rf bandpass.ea*.png")
 os.system("mv *.png plots")
 os.system("mv bandpass.pdf plots")
 if os.path.exists('images')==False:
