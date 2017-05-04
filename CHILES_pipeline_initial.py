@@ -51,12 +51,15 @@
 # v2.2:  Allow cubes to be made even if missing spws in testcubes.  Flagged channels that are already 90% flagged.  Updated some plots in target module
 #        Saving final flagging statistics vs. frequency for final reference.  
 # v2.2.1:  Small changes with file management.  
+# v2.2.2:  Bug fixes.
+# v2.3: Added code to access new weblog files and not crash if it can't find it.
+#       Updated to CASA 4.7.2
 
-version = "2.2.1"
+version = "2.3"
 svnrevision = '11nnn'
-date = "2017Jan10"
+date = "2017May02"
 
-print "Pipeline version "+version+" for use with CASA 4.7"
+print "Pipeline version "+version+" for use with CASA 4.7.2"
 import sys
 import pylab as pylab
 # include additional packages for hanningsmooth
@@ -68,8 +71,8 @@ import os
 # Check that we are using the correct version of CASA
 [major,minor,revision] = casadef.casa_version.split('.')
 casa_version = 100*int(major)+10*int(minor)+int(revision[0])
-if casa_version != 470:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.7")
+if casa_version != 472:
+    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.7.2")
 
 # Define location of pipeline
 #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
@@ -140,8 +143,6 @@ time_list=runtiming('startup', 'start')
 execfile(pipepath+'CHILES_pipe_startup.py')
 time_list=runtiming('startup', 'end')
 pipeline_save()
-
-weblog_file=find('index.html',nrao_weblog_path+SDM_name)
 
 try:
 
@@ -812,6 +813,14 @@ try:
     
 
 ######################################################################
+    weblog_file=find('index.html',nrao_weblog_path+SDM_name)
+
+    if weblog_file==None:
+        tu=qa.quantity(startdate,'d')
+        obsdate=qa.time(tu,form=['fits','no_time'])
+        dirname='13B-266'+str(obsdate).replace('-','_')+'*/products/pipeline*/html/'
+        weblog_file=find('index.html',glob.glob(nrao_weblog_path+dirname)[0])
+
 
 # Assemble graphical output for this stage.
 # Need to include:  links to NRAO continuum pipeline, prtan output, logs
@@ -829,7 +838,8 @@ try:
     wlog.write('<br>\n')
     wlog.write('<hr>\n')
     wlog.write('<li> Session: '+SDM_name+'\n')
-    wlog.write('<li><a href="'+weblog_file+'">NRAO continuum pipeline weblog</a></li>\n')
+    if weblog_file!=None:
+        wlog.write('<li><a href="'+weblog_file+'">NRAO continuum pipeline weblog</a></li>\n')
     wlog.write('<li>Antenna positions: \n')
     wlog.write('<br><img src="./plots/antpos.png"></li>\n')
     wlog.write('<li><a href="logs/initial.log">Initial Module Log</a></li>\n')

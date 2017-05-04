@@ -132,7 +132,6 @@ os.system("cp *flag_stats.txt FINAL/.")
 # Save Flag tables
 
 os.system("cp -r "+ms_active+".flagversions/flags.finalflags FINAL/.")
-os.system("cp -r "+ms_active+".flagversions/flags.finalfinalflags FINAL/.")
 
 #Move plots, images to sub-directory
 

@@ -12,6 +12,11 @@ import pylab as pylab
 import re as re
 import sys
 
+#Put old plots & html file in Backup directory
+os.system('mkdir BACKUP')
+os.system('mv plots/phase*.png BACKUP/.')
+os.system('mv phasecal.html BACKUP/.')
+
 #Remove old files from previous attempts using rmtables
 #Clear model of phase calibrator if module previously run.
 if os.path.exists('initialphase.gcal'):
