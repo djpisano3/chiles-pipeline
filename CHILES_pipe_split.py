@@ -165,7 +165,7 @@ wlog.close()
 os.system("cp -r *html FINAL/.")
 os.system("cp -r plots FINAL/.")
 # Save variable values
-os.system("cp -r CHILES_pipe_restore.list FINAL/.")
+os.system("cp -r pipeline_shelf.restore FINAL/.")
 
 logprint ("Finished CHILES_pipe_split.py", logfileout='logs/split.log')
 time_list=runtiming('split', 'end')
