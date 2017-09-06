@@ -1,7 +1,7 @@
 # chiles-pipeline
 README for CHILES Pipeline
-May 4, 2017
-Version 2.3
+September 6, 2017
+Version 2.3.1
 
 This is the production quality version of the pipeline.  It is
 designed to run on CASA 4.7.2  It can be found in Socorro at 

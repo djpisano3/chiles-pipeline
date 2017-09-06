@@ -26,6 +26,7 @@
 # 9/21/16 DJP:  Changed channel range for tst_bpass_spw (only excluding 50 edge channels).  Moved flagmanager to end.
 # 10/28/16 DJP: Added backup of finalBPcal.b, (1/21/17 DJP: fixed bug)
 # 1/10/17 DJP: Delete individual png bandpass plots as information is already in bandpass.pdf
+# 5/13/17 DJP: Removed plotbandpass and replace with using plotms for refAnt.
 
 #Part I: define some variables that will be used later
 import copy
@@ -606,16 +607,35 @@ for ii in range(nplots):
     plotcal()
 
 #17: Bandpass solutions
-default('plotbandpass')
-caltable='finalBPcal.b'
-yaxis='both'
-xaxis='freq'
-figfile='bandpass'
-buildpdf=True
-convert='/usr/bin/convert'
-interactive=False
-subplot='42'
-plotbandpass()
+seq=range(0,15)
+for ii in seq:
+    default('plotms')
+    vis='finalBPcal.b'
+    field='2'        # Only for 3C286
+    xaxis='freq'
+    yaxis='amp'
+    xdatacolumn='corrected'
+    ydatacolumn='corrected'
+    averagedata=True
+    avgtime='1e5'
+    avgscan=True
+    avgbaseline=True
+    antenna=refAnt
+    scalar=False
+    spw=str(ii)
+    avgspw=False
+    showlegend=False
+    coloraxis='Antenna1'
+    title='Spw'+str(ii)+': Amp v. Freq'
+    showgui=False
+    clearplots=True
+    plotfile='bpamp_spw'+str(ii)+'.png'
+    plotms()
+    
+    yaxis='phase'
+    title='Spw'+str(ii)+': Phase v. Freq'
+    plotfile='bpphase_spw'+str(ii)+'.png'
+    plotms()
 
 #Plot UV spectrum (averaged over all baselines & time) of flux calibrator
 default('plotms')
@@ -842,9 +862,7 @@ pylab.close(fig)
 
 #Move plots, images to sub-directory
 
-os.system("rm -rf bandpass.ea*.png")
 os.system("mv *.png plots")
-os.system("mv bandpass.pdf plots")
 if os.path.exists('images')==False:
     os.system("mkdir images")
 os.system("mv fluxcalibrator_spw*.* images")
@@ -874,8 +892,14 @@ wlog.write('<br><img src="plots/finaldelay5.png">\n')
 wlog.write('<br><img src="plots/finaldelay6.png">\n')
 wlog.write('<br><img src="plots/finaldelay7.png">\n')
 wlog.write('<br><img src="plots/finaldelay8.png"></li>\n')
-wlog.write('<li> Bandpass solutions: \n')
-wlog.write('<br><object data="plots/bandpass.pdf" type="application/pdf" width="100%" height="100%"><p>Download <a href="plots/bandpass.pdf">bandpass.pdf</a></p></object></li>\n')
+wlog.write('<li> Bandpass solutions (amplitude and phase) for reference antenna: \n')
+wlog.write('<li> Color coded by antenna, both polarizations shown \n')
+wlog.write('<table> \n')
+for ii in seq:
+    wlog.write('<tr><td><img src="plots/bpamp_spw'+str(ii)+'.png"></td>\n')
+    wlog.write('<td><img src="plots/bpphase_spw'+str(ii)+'.png"></td></tr>\n')
+wlog.write('</table> \n')
+wlog.write('<br>')
 wlog.write('<li> Amp vs. Phase (averaged over all channels in a spw): \n')
 for ii in seq:
     wlog.write('<br><img src="plots/fluxcal_ampphase_Spw'+str(ii)+'.png">\n')

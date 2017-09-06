@@ -13,7 +13,8 @@ import re as re
 import sys
 
 #Put old plots & html file in Backup directory
-os.system('mkdir BACKUP')
+if os.path.exists(BACKUP)!=True:
+    os.system('mkdir BACKUP')
 os.system('mv plots/phase*.png BACKUP/.')
 os.system('mv phasecal.html BACKUP/.')
 
