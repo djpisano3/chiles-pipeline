@@ -18,7 +18,7 @@ logprint ("Starting CHILES_pipe_bandpass_plots.py", logfileout='logs/bandpass.lo
 time_list=runtiming('bandpass', 'start')
 
 #Put old plots & html file in Backup directory
-if os.path.exists(BACKUP)!=True:
+if os.path.exists('BACKUP')!=True:
     os.system('mkdir BACKUP')
 os.system('mv bandpass.html BACKUP/.')
 os.system('mv plots/fluxcal*.png BACKUP/.)
