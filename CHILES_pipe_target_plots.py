@@ -14,6 +14,7 @@
 # 6/28/16 DJP: Including time/frequency averaging on the target after initial rflag and extend.
 # 7/1/16 DJP:  Including time-averaged RFLAG and using parameters determined by XF.  Setting rflag scale=3, growtime=60.  
 # 9/21/16 DJP:  Fixed variable names for time-averaged RFLAG.  
+# 9/29/17 DJP:  Fixed bugs and improved cleaning up of existing files.
 
 
 logprint ("Starting CHILES_pipe_target_plots.py", logfileout='logs/target.log')
@@ -30,6 +31,10 @@ import sys
 # Clean up data from past runs of module:
 os.system("rm -rf images/target_spw*.*")
 os.system("rm -rf plots/target_*.png")
+
+# If target module crashed after splits:
+if os.path.exists('target_flux_averaged.ms'):
+    os.system("rm -rf target_flux_averaged.ms'))
 
 # Step 3: Diagnostic Plots
 logprint("Making diagnostic plots",logfileout='logs/target.log')
