@@ -55,10 +55,11 @@
 # v2.3: Added code to access new weblog files and not crash if it can't find it.
 #       Updated to CASA 4.7.2
 # v2.3.1: Properly handling plots and backing up old plots in rerun/plots modules.  Fixed split commands.
+# v2.3.2: Fixed typos in some modules.
 
-version = "2.3.1"
+version = "2.3.2"
 svnrevision = '11nnn'
-date = "2017Sep06"
+date = "2017Oct05"
 
 print "Pipeline version "+version+" for use with CASA 4.7.2"
 import sys

@@ -21,10 +21,10 @@ time_list=runtiming('bandpass', 'start')
 if os.path.exists('BACKUP')!=True:
     os.system('mkdir BACKUP')
 os.system('mv bandpass.html BACKUP/.')
-os.system('mv plots/fluxcal*.png BACKUP/.)
-os.system('mv plots/bpamp*.png BACKUP/.)
-os.system('mv plots/bpphase*.png BACKUP/.)
-os.system('mv plots/finaldelay*.png BACKUP/.)
+os.system('mv plots/fluxcal*.png BACKUP/.')
+os.system('mv plots/bpamp*.png BACKUP/.')
+os.system('mv plots/bpphase*.png BACKUP/.')
+os.system('mv plots/finaldelay*.png BACKUP/.')
 # Remove old images of flux calibrator
 os.system("rm -rf images/fluxcalibrator_spw*.*")
 
