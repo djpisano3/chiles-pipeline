@@ -371,8 +371,8 @@ for ii in seq:
     field='2'        # Only for 3C286
     xaxis='freq'
     yaxis='amp'
-    xdatacolumn='corrected'
-    ydatacolumn='corrected'
+    xdatacolumn=''
+    ydatacolumn=''
     averagedata=True
     avgtime='1e5'
     avgscan=True
@@ -430,7 +430,7 @@ if os.path.exists(output_ms):
     os.system("rm -rf "+output_ms)
     
 #18: average the data
-default('split')
+default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
@@ -448,7 +448,7 @@ correlation=''
 observation=''
 keepflags=False
 keepmms=False
-split()
+oldsplit()
 
 # Use plotms to make plot of amplitude vs. phase, divided by spw
 seq=range(0,15)
@@ -497,29 +497,29 @@ for ii in seq:
 seq=range(0,15)
 #19: 
 for ii in seq:
-    print 'STARTS IMAGING FLUX CALIBRATOR OF SPW='+str(ii)
-    default('clean')
+    default('tclean')
     image_name='fluxcalibrator_spw'+str(ii)
     fieldid='1331*'
     grid_mode=''
     number_w=1
     image_size=[512,512]
     iteration=1000
-#    mask_name=['fluxcal_mask.txt']
     mask_name=['']
+    
     vis=output_ms
     imagename=image_name
-    selectdata=False
+    selectdata=True
+    datacolumn='data'
     field=fieldid
     spw=str(ii)
-    mode='mfs'
+    specmode='mfs'
     nterms=1
     niter=iteration
     gain=0.1
     gridmode=grid_mode
     wprojplanes=number_w
     threshold='0.0mJy'
-    psfmode='clark'
+    deconvolver='clark'
     imagermode='csclean'
     cyclefactor=1.5
     cyclespeedup=-1
@@ -531,14 +531,15 @@ for ii in seq:
     stokes='I'
     weighting='briggs'
     robust=0.8
-    uvtaper=False
+    uvtaper=[]
     modelimage=''
     restoringbeam=['']
+    pblimit=-0.2
     pbcor=False
     usescratch=False
     allowchunk=False
     async=False
-    clean()
+    tclean()
 
    
 #20:  Calculate bmaj, bmin, peak, and rms for images of flux calibrator in each spw.

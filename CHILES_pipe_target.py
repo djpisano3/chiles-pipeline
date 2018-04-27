@@ -17,6 +17,8 @@
 # 9/21/16 DJP:  Fixed variable names for time-averaged RFLAG. 
 # 12/7/16 DJP:  Changed plots to frequency on x-axis. Including amp v. time plots. Saving flagging statistics to file.
 # 12/9/16 DJP:  Added additional flagging to completely flag any channel that is already more than 90% flagged (code from XF).
+# 4/22/18 DJP: Changing flagging and split to oldsplit
+
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
 time_list=runtiming('target', 'start')
@@ -70,17 +72,51 @@ async=False
 applycal()
 
 
-# Step 2: RFLAG with extend on deepfield
-logprint("Flag deepfield with RFLAG",logfileout='logs/target.log')
- 
-# Using parameters determined by XF.  Set sigma clip level at 3.0x the noise level
+# Step 2: Flagging of deepfield with Clipping & RFLAG & Time-averaged RFLAG
+logprint("Flagging deepfield",logfileout='logs/target.log')
+# New Flagging routines by XF
+#Initial clip on spw 14 to exclude any high points
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='1'
+spw='14'
+mode='clip'
+clipminmax=[0,30]
+action='apply'
+flagbackup=False
+flagdata()
+
+#This calculates timedev and freqdev for spw14
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='1'
+spw='14'
+scan=''
+mode='rflag'
+timedev='tdev14.txt'
+freqdev='fdev14.txt'
+freqdevscale=1.0
+timedevscale=1.0
+extendflags=False
+action='calculate'
+flagdata()
+
+
+with open("tdev14.txt","r") as data:
+    dictTime=ast.literal_eval(data.read())
+
+with open("fdev14.txt","r") as data:
+    dictFreq=ast.literal_eval(data.read())
+
+timenoavg=dictTime["timedev"][0][2]
+freqnoavg=dictFreq["freqdev"][0][2]
 
 ff=float(1)
-freqnoavg=0.4
-timenoavg=0.5
-scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
+scaling1=[2.4,2.1,1.9,1.3,1.2,1.2,1.1,1.1,1.1,1.1,1.0,1.0,1.0,1.0,1.0]
 scaling=np.asarray(scaling1)
-sigmacut=4.0
+sigmacut=8.0
 freqd1noavg=scaling*freqnoavg*sigmacut
 timed1noavg=scaling*timenoavg*sigmacut
 
@@ -106,45 +142,36 @@ flagbackup=False
 savepars=True
 flagdata()
 
-clearstat()
-
-logprint ("Extending flags on target", logfileout='logs/target.log')
-
-
+#This calculates timedev and freqdev for time-averaged data
 default('flagdata')
 vis=ms_active
-mode='extend'
-field='deepfield'
 datacolumn='corrected'
-correlation=''
-combinescans=False
-extendpols=False      
-growtime=60       
-growfreq=90       
-growaround=True       
-flagneartime=True      
-flagnearfreq=True       
-action='apply'
-display=''
-flagbackup=False    
-savepars=False
+field='1'
+spw='14'
+scan=''
+mode='rflag'
+timedev='tdev14_tavg.txt'
+freqdev='fdev14_tavg.txt'
+freqdevscale=1.0
+timedevscale=1.0
+timeavg=True
+timebin='1000s'
+extendflags=False
+action='calculate'
 flagdata()
 
-clearstat()
 
-# time-averaged rflag for target
+with open("tdev14_tavg.txt","r") as data:
+    dictTime=ast.literal_eval(data.read())
 
-logprint ("Time-averaged flagging on target", logfileout='logs/target.log')
+with open("fdev14_tavg.txt","r") as data:
+    dictFreq=ast.literal_eval(data.read())
 
-# Using parameters determined by XF.  Set sigma clip level at 3.0x the noise level
-
-freqavgval=0.08
-timeavgval=9.2e-6
+timeavgval=dictTime["timedev"][0][2]
+freqavgval=dictFreq["freqdev"][0][2]
 
 
-scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
-scaling=np.asarray(scaling1)
-sigmacut=3.0
+sigmacut=8.0
 freqd1avg=scaling*freqavgval*sigmacut
 timed1avg=scaling*timeavgval*sigmacut
 
@@ -170,6 +197,106 @@ action='apply'
 flagbackup=False
 savepars=True
 flagdata()
+
+
+# Old flagging routinges
+## Using parameters determined by XF.  Set sigma clip level at 3.0x the noise level
+#
+#ff=float(1)
+#freqnoavg=0.4
+#timenoavg=0.5
+#scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
+#scaling=np.asarray(scaling1)
+#sigmacut=4.0
+#freqd1noavg=scaling*freqnoavg*sigmacut
+#timed1noavg=scaling*timenoavg*sigmacut
+#
+#default('flagdata')
+#vis=ms_active
+#mode='rflag'
+#field='deepfield'
+#spw='0~14'
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendflags=False       
+#extendpols=False      
+#winsize=3
+#freqdev=[[ff,0.0,freqd1noavg[0]],[ff,1.0,freqd1noavg[1]],[ff,2.0,freqd1noavg[2]],[ff,3.0,freqd1noavg[3]],[ff,4.0,freqd1noavg[4]],[ff,5.0,freqd1noavg[5]],[ff,6.0,freqd1noavg[6]],[ff,7.0,freqd1noavg[7]],[ff,8.0,freqd1noavg[8]],[ff,9.0,freqd1noavg[9]],[ff,10.0,freqd1noavg[10]],[ff,11.0,freqd1noavg[11]],[ff,12.0,freqd1noavg[12]],[ff,13.0,freqd1noavg[13]],[ff,14.0,freqd1noavg[14]]]
+#timedev=[[ff,0.0,timed1noavg[0]],[ff,1.0,timed1noavg[1]],[ff,2.0,timed1noavg[2]],[ff,3.0,timed1noavg[3]],[ff,4.0,timed1noavg[4]],[ff,5.0,timed1noavg[5]],[ff,6.0,timed1noavg[6]],[ff,7.0,timed1noavg[7]],[ff,8.0,timed1noavg[8]],[ff,9.0,timed1noavg[9]],[ff,10.0,timed1noavg[10]],[ff,11.0,timed1noavg[11]],[ff,12.0,timed1noavg[12]],[ff,13.0,timed1noavg[13]],[ff,14.0,timed1noavg[14]]]
+#timedevscale=1.0
+#freqdevscale=1.0
+#action='apply'
+#display=''
+#flagbackup=False
+#savepars=True
+#flagdata()
+#
+#clearstat()
+#
+#logprint ("Extending flags on target", logfileout='logs/target.log')
+#
+#
+#default('flagdata')
+#vis=ms_active
+#mode='extend'
+#field='deepfield'
+#datacolumn='corrected'
+#correlation=''
+#combinescans=False
+#extendpols=False      
+#growtime=60       
+#growfreq=90       
+#growaround=True       
+#flagneartime=True      
+#flagnearfreq=True       
+#action='apply'
+#display=''
+#flagbackup=False    
+#savepars=False
+#flagdata()
+#
+#clearstat()
+#
+## time-averaged rflag for target
+#
+#logprint ("Time-averaged flagging on target", logfileout='logs/target.log')
+#
+## Using parameters determined by XF.  Set sigma clip level at 10x the noise level
+#
+#freqavgval=0.08
+#timeavgval=9.2e-6
+#
+#
+#scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
+#scaling=np.asarray(scaling1)
+#sigmacut=10.0  # Changed from 3-sigma to 10-sigma.  
+#freqd1avg=scaling*freqavgval*sigmacut
+#timed1avg=scaling*timeavgval*sigmacut
+#
+#default('flagdata')
+#vis=ms_active
+#mode='rflag'
+#field='deepfield'
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendpols=False      
+#extendflags=False        
+#freqdev=[[ff,0.0,freqd1avg[0]],[ff,1.0,freqd1avg[1]],[ff,2.0,freqd1avg[2]],[ff,3.0,freqd1avg[3]],[ff,4.0,freqd1avg[4]],[ff,5.0,freqd1avg[5]],[ff,6.0,freqd1avg[6]],[ff,7.0,freqd1avg[7]],[ff,8.0,freqd1avg[8]],[ff,9.0,freqd1avg[9]],[ff,10.0,freqd1avg[10]],[ff,11.0,freqd1avg[11]],[ff,12.0,freqd1avg[12]],[ff,13.0,freqd1avg[13]],[ff,14.0,freqd1avg[14]]]
+#timedev=[[ff,0.0,timed1avg[0]],[ff,1.0,timed1avg[1]],[ff,2.0,timed1avg[2]],[ff,3.0,timed1avg[3]],[ff,4.0,timed1avg[4]],[ff,5.0,timed1avg[5]],[ff,6.0,timed1avg[6]],[ff,7.0,timed1avg[7]],[ff,8.0,timed1avg[8]],[ff,9.0,timed1avg[9]],[ff,10.0,timed1avg[10]],[ff,11.0,timed1avg[11]],[ff,12.0,timed1avg[12]],[ff,13.0,timed1avg[13]],[ff,14.0,timed1avg[14]]]
+#timedevscale=1.0
+#freqdevscale=1.0
+#channelavg=False
+#chanbin=1
+#timeavg=True
+#timebin='1000s'
+#action='apply'
+#flagbackup=False
+#savepars=True
+#flagdata()
 
 clearstat()
 
@@ -313,7 +440,7 @@ for ii in seq:
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_target_flux_averaged.ms'
 
-default('split')
+default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
@@ -331,13 +458,13 @@ correlation=''
 observation=''
 keepflags=False
 keepmms=False
-split()
+oldsplit()
 
 seq=range(0,15)
 #Image target: 
 for ii in seq:
     print 'STARTS IMAGING Deepfield OF SPW='+str(ii)
-    default('clean')
+    default('tclean')
     image_name='target_spw'+str(ii)
     fieldid='deepfield'
     grid_mode=''
@@ -347,17 +474,18 @@ for ii in seq:
     mask_name=['']
     vis=output_ms
     imagename=image_name
-    selectdata=False
+    selectdata=True
+    datacolumn='data'
     field=fieldid
     spw=str(ii)
-    mode='mfs'
+    specmode='mfs'
     nterms=1
     niter=iteration
     gain=0.1
     gridmode=grid_mode
     wprojplanes=number_w
     threshold='0.0mJy'
-    psfmode='clark'
+    deconvolver='clark'
     imagermode='csclean'
     cyclefactor=1.5
     cyclespeedup=-1
@@ -369,14 +497,15 @@ for ii in seq:
     stokes='I'
     weighting='briggs'
     robust=0.8
-    uvtaper=False
+    uvtaper=[]
     modelimage=''
     restoringbeam=['']
+    pblimit=-0.2
     pbcor=False
     usescratch=False
     allowchunk=False
     async=False
-    clean()
+    tclean()
 
 # Measure statistics of deepfield image:
 box_target='1300,1100,1900,1600'

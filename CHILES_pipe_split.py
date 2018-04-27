@@ -92,7 +92,7 @@ flagstatname=msname.rstrip('ms') + 'flag_stats.txt'
 np.savetxt(flagstatname,np.column_stack((freq,flagged,totals,flag_frac)),fmt='%s',header='freq [MHz] #flags #total %flagged')
 
 
-# Split with averaging by 2x in time & 4x in frequency
+# Split with no averaging.
 outputms=ms_active[:-3]+'_calibrated_deepfield.ms'
 targetfile=outputms
 
@@ -100,8 +100,30 @@ targetfile=outputms
 if os.path.exists(targetfile):
     os.system("rm -rf "+targetfile)
     os.system("rm -rf FINAL/"+targetfile)
-        
-default('split')
+
+# Split full spectral, temporal resolution of Target:        
+default('oldsplit')
+vis=ms_active
+datacolumn='corrected'
+outputvis=targetfile
+field='deepfield'
+spw ='0~14'
+width=1
+timebin=''
+oldsplit()
+
+os.system("mv "+targetfile+" FINAL/")
+
+# Split with averaging by 2x in time & 4x in frequency
+outputms=ms_active[:-3]+'_calibrated_deepfield_smooth.ms'
+targetfile=outputms
+
+# Delete final MS if already present
+if os.path.exists(targetfile):
+    os.system("rm -rf "+targetfile)
+    os.system("rm -rf FINAL/"+targetfile)
+
+default('oldsplit')
 vis=ms_active
 datacolumn='corrected'
 outputvis=targetfile
@@ -109,7 +131,7 @@ field='deepfield'
 spw ='0~14'
 width=4
 timebin='16s'
-split()
+oldsplit()
 
 os.system("mv "+targetfile+" FINAL/")
 
@@ -121,6 +143,7 @@ os.system("cp -r gain_curves.g FINAL/.")
 os.system("cp -r finaldelay.k FINAL/.")
 os.system("cp -r finalBPcal.b FINAL/.")
 os.system("cp -r finalphase_scan.gcal FINAL/.")
+os.system("cp -r finalphase_int.gcal FINAL/.")
 os.system("cp -r finalamp.gcal FINAL/.")
 os.system("cp -r finalflux.gcal FINAL/.")
 
@@ -129,11 +152,11 @@ os.system("cp -r finalflux.gcal FINAL/.")
 os.system("cp manual_flags_*.txt FINAL/.")
 os.system("cp *flag_stats.txt FINAL/.")
 
-# Save Flag tables
+# Save all Flagversions tables
 
-os.system("cp -r "+ms_active+".flagversions/flags.finalflags FINAL/.")
+os.system("cp -r "+ms_active+".flagversions FINAL/.")
 
-#Move plots, images to sub-directory
+#Move plots, images to sub-directory, and save those.  
 
 os.system("mv *.png plots")
 
@@ -164,13 +187,15 @@ wlog.close()
 # Copy html files and plots to FINAL directory
 os.system("cp -r *html FINAL/.")
 os.system("cp -r plots FINAL/.")
-# Save variable values
-os.system("cp -r pipeline_shelf.restore FINAL/.")
 
 logprint ("Finished CHILES_pipe_split.py", logfileout='logs/split.log')
 time_list=runtiming('split', 'end')
 
 pipeline_save()
 
+# Save variable values
+os.system("cp -r pipeline_shelf.restore FINAL/.")
+
 # Copy logs to FINAL directory (needs to be after final "save" to preserve all information
+os.system("cp *.log logs")
 os.system("cp -r logs FINAL/.")

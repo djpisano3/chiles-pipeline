@@ -27,6 +27,7 @@
 # 10/28/16 DJP: Added backup of finalBPcal.b, (1/21/17 DJP: fixed bug)
 # 1/10/17 DJP: Delete individual png bandpass plots as information is already in bandpass.pdf
 # 5/13/17 DJP: Removed plotbandpass and replace with using plotms for refAnt.
+# 4/22/18 DJP: Changing flagging and split to oldsplit
 
 #Part I: define some variables that will be used later
 import copy
@@ -317,25 +318,66 @@ async=False
 applycal()
 
 #8: First rflag run 
-logprint ("RFLAG+Extend on flux calibrator", logfileout='logs/bandpass.log')
+# This is the new flagging code from XF.  
+logprint ("Flagging flux calibrator by Clipping & RFLAG", logfileout='logs/bandpass.log')
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='2'
+spw='14'
+mode='clip'
+clipminmax=[0,50]
+action='apply'
+flagbackup=False
+flagdata()
 
-f=ms.msseltoindex(vis=ms_active,field='1331*')['field']
-ff= float(f[0])
+#This calculates timedev and freqdev for spw14
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='2'
+spw='14'
+scan=''
+mode='rflag'
+timedev='tdev14_f2.txt'
+freqdev='fdev14_f2.txt'
+freqdevscale=1.0
+timedevscale=1.0
+extendflags=False
+action='calculate'
+flagdata()
+
+
+with open("tdev14_f2.txt","r") as data:
+    dictTime=ast.literal_eval(data.read())
+
+with open("fdev14_f2.txt","r") as data:
+    dictFreq=ast.literal_eval(data.read())
+
+timenoavg=dictTime["timedev"][0][2]
+freqnoavg=dictFreq["freqdev"][0][2]
+
+ff=float(2)
+scaling1=[2.4,2.1,1.9,1.3,1.2,1.2,1.1,1.1,1.1,1.1,1.0,1.0,1.0,1.0,1.0]
+scaling=np.asarray(scaling1)
+sigmacut=8.0
+freqd1noavg=scaling*freqnoavg*sigmacut
+timed1noavg=scaling*timenoavg*sigmacut
 
 default('flagdata')
 vis=ms_active
 mode='rflag'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='2'
 spw='0~14'
 correlation=''
 ntime='scan'
 combinescans=False
 datacolumn='corrected'
-extendflags=False    # Explicitly set to False since default is True.  Extending on next step. 
-extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
+extendflags=False       
+extendpols=False      
 winsize=3
-freqdev=[[ff,0.0,7.1],[ff,1.0,5.5],[ff,2.0,4.5],[ff,3.0,4.1],[ff,4.0,3.9],[ff,5.0,3.7],[ff,6.0,3.6],[ff,7.0,3.7],[ff,8.0,3.3],[ff,9.0,3.0],[ff,10.0,3.0],[ff,11.0,3.0],[ff,12.0,2.9],[ff,13.0,3.0],[ff,14.0,3.0]]
-timedev=[[ff,0.0,9.4],[ff,1.0,7.3],[ff,2.0,5.9],[ff,3.0,5.4],[ff,4.0,5.2],[ff,5.0,4.9],[ff,6.0,4.8],[ff,7.0,4.9],[ff,8.0,4.4],[ff,9.0,4.0],[ff,10.0,3.9],[ff,11.0,3.9],[ff,12.0,3.9],[ff,13.0,4.0],[ff,14.0,4.0]]
+freqdev=[[ff,0.0,freqd1noavg[0]],[ff,1.0,freqd1noavg[1]],[ff,2.0,freqd1noavg[2]],[ff,3.0,freqd1noavg[3]],[ff,4.0,freqd1noavg[4]],[ff,5.0,freqd1noavg[5]],[ff,6.0,freqd1noavg[6]],[ff,7.0,freqd1noavg[7]],[ff,8.0,freqd1noavg[8]],[ff,9.0,freqd1noavg[9]],[ff,10.0,freqd1noavg[10]],[ff,11.0,freqd1noavg[11]],[ff,12.0,freqd1noavg[12]],[ff,13.0,freqd1noavg[13]],[ff,14.0,freqd1noavg[14]]]
+timedev=[[ff,0.0,timed1noavg[0]],[ff,1.0,timed1noavg[1]],[ff,2.0,timed1noavg[2]],[ff,3.0,timed1noavg[3]],[ff,4.0,timed1noavg[4]],[ff,5.0,timed1noavg[5]],[ff,6.0,timed1noavg[6]],[ff,7.0,timed1noavg[7]],[ff,8.0,timed1noavg[8]],[ff,9.0,timed1noavg[9]],[ff,10.0,timed1noavg[10]],[ff,11.0,timed1noavg[11]],[ff,12.0,timed1noavg[12]],[ff,13.0,timed1noavg[13]],[ff,14.0,timed1noavg[14]]]
 timedevscale=1.0
 freqdevscale=1.0
 action='apply'
@@ -344,29 +386,57 @@ flagbackup=False
 savepars=True
 flagdata()
 
-#9:
-default('flagdata')
-vis=ms_active
-mode='extend'
-field='2'            # Hard-coded to field 2 as this is always 3C286
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendpols=False      
-growtime=70       
-growfreq=80       
-growaround=True      
-flagneartime=True   # Flag neighboring times to existing flags
-flagnearfreq=True   # Flag neighboring channels to existing flags    
-action='apply'
-display=''
-flagbackup=False   # Will backup final flagging manually.
-savepars=True
-flagdata()
+# Below is the old code for flagging.
+#logprint ("RFLAG+Extend on flux calibrator", logfileout='logs/bandpass.log')
+#
+#f=ms.msseltoindex(vis=ms_active,field='1331*')['field']
+#ff= float(f[0])
+#
+#default('flagdata')
+#vis=ms_active
+#mode='rflag'
+#field='2'            # Hard-coded to field 2 as this is always 3C286
+#spw='0~14'
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendflags=False    # Explicitly set to False since default is True.  Extending on next step. 
+#extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
+#winsize=3
+#freqdev=[[ff,0.0,7.1],[ff,1.0,5.5],[ff,2.0,4.5],[ff,3.0,4.1],[ff,4.0,3.9],[ff,5.0,3.7],[ff,6.0,3.6],[ff,7.0,3.7],[ff,8.0,3.3],[ff,9.0,3.0],[ff,10.0,3.0],[ff,11.0,3.0],[ff,12.0,2.9],[ff,13.0,3.0],[ff,14.0,3.0]]
+#timedev=[[ff,0.0,9.4],[ff,1.0,7.3],[ff,2.0,5.9],[ff,3.0,5.4],[ff,4.0,5.2],[ff,5.0,4.9],[ff,6.0,4.8],[ff,7.0,4.9],[ff,8.0,4.4],[ff,9.0,4.0],[ff,10.0,3.9],[ff,11.0,3.9],[ff,12.0,3.9],[ff,13.0,4.0],[ff,14.0,4.0]]
+#timedevscale=1.0
+#freqdevscale=1.0
+#action='apply'
+#display=''
+#flagbackup=False
+#savepars=True
+#flagdata()
+#
+##9:
+#default('flagdata')
+#vis=ms_active
+#mode='extend'
+#field='2'            # Hard-coded to field 2 as this is always 3C286
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendpols=False      
+#growtime=70       
+#growfreq=80       
+#growaround=True      
+#flagneartime=True   # Flag neighboring times to existing flags
+#flagnearfreq=True   # Flag neighboring channels to existing flags    
+#action='apply'
+#display=''
+#flagbackup=False   # Will backup final flagging manually.
+#savepars=True
+#flagdata()
 
 # Summary of flagging, after RFLAG+extend (for testing purposes only)
-logprint ("Summary of flags after RFLAG+extend", logfileout='logs/bandpass.log')
+logprint ("Summary of flags after Flagging", logfileout='logs/bandpass.log')
 default('flagdata')
 vis=ms_active
 field='2'       # Only flagging 3C286, so don't need stats on other sources.
@@ -614,8 +684,8 @@ for ii in seq:
     field='2'        # Only for 3C286
     xaxis='freq'
     yaxis='amp'
-    xdatacolumn='corrected'
-    ydatacolumn='corrected'
+    xdatacolumn=''
+    ydatacolumn=''
     averagedata=True
     avgtime='1e5'
     avgscan=True
@@ -673,7 +743,7 @@ if os.path.exists(output_ms):
     os.system("rm -rf "+output_ms)
     
 #18: average the data
-default('split')
+default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
@@ -691,7 +761,7 @@ correlation=''
 observation=''
 keepflags=False
 keepmms=False
-split()
+oldsplit()
 
 # Use plotms to make plot of amplitude vs. phase, divided by spw
 seq=range(0,15)
@@ -740,29 +810,31 @@ for ii in seq:
 seq=range(0,15)
 #19: 
 for ii in seq:
+    #19: Imaging flux calibrator
     print 'STARTS IMAGING FLUX CALIBRATOR OF SPW='+str(ii)
-    default('clean')
+    default('tclean')
     image_name='fluxcalibrator_spw'+str(ii)
     fieldid='1331*'
     grid_mode=''
     number_w=1
     image_size=[512,512]
     iteration=1000
-#    mask_name=['fluxcal_mask.txt']
     mask_name=['']
+    
     vis=output_ms
     imagename=image_name
-    selectdata=False
+    selectdata=True
+    datacolumn='data'
     field=fieldid
     spw=str(ii)
-    mode='mfs'
+    specmode='mfs'
     nterms=1
     niter=iteration
     gain=0.1
     gridmode=grid_mode
     wprojplanes=number_w
     threshold='0.0mJy'
-    psfmode='clark'
+    deconvolver='clark'
     imagermode='csclean'
     cyclefactor=1.5
     cyclespeedup=-1
@@ -774,14 +846,15 @@ for ii in seq:
     stokes='I'
     weighting='briggs'
     robust=0.8
-    uvtaper=False
+    uvtaper=[]
     modelimage=''
     restoringbeam=['']
+    pblimit=-0.2
     pbcor=False
     usescratch=False
     allowchunk=False
     async=False
-    clean()
+    tclean()
 
    
 #20:  Calculate bmaj, bmin, peak, and rms for images of flux calibrator in each spw.

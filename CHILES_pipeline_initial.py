@@ -56,25 +56,30 @@
 #       Updated to CASA 4.7.2
 # v2.3.1: Properly handling plots and backing up old plots in rerun/plots modules.  Fixed split commands.
 # v2.3.2: Fixed typos in some modules.
+# v3.0:  Updated to CASA 5.1.2, updated tasks, saving more diagnostic plots/logs as well.
+#        Changes include:  Switching to tclean & oldsplit, saving additional calibration table in split module,
+#                          changing flagging.  
 
-version = "2.3.2"
+version = "3.0.0"
 svnrevision = '11nnn'
-date = "2017Oct05"
+date = "2018Apr26"
 
-print "Pipeline version "+version+" for use with CASA 4.7.2"
+print "Pipeline version "+version+" for use with CASA 5.1.2"
 import sys
 import pylab as pylab
 # include additional packages for hanningsmooth
 import shutil
 import glob
 import os
+import ast   # Included for flagging
 
 
 # Check that we are using the correct version of CASA
-[major,minor,revision] = casadef.casa_version.split('.')
+casaver = casa['version'].split('.')
+major,minor,revision=casaver[0],casaver[1],casaver[2].split('-')[0]
 casa_version = 100*int(major)+10*int(minor)+int(revision[0])
-if casa_version != 472:
-    sys.exit("Your CASA version is "+casadef.casa_version+", please re-start using CASA 4.7.2")
+if casa_version != 512:
+    sys.exit("Your CASA version is "+casa_version+", please re-start using CASA 5.1.2")
 
 # Define location of pipeline
 #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'

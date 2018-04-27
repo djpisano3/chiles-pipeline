@@ -699,6 +699,7 @@ def spwsforfield(vis,field):
 # -------
 
 import numpy
+import pylab as pl
 
 # ------------------------------------------------------------------------------
 # class RefAntHeuristics

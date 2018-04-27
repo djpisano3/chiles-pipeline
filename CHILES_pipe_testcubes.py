@@ -8,6 +8,9 @@
 # 9/21/16 DJP:  Reduced number of iterations to 1.  As with original code, but running on each spw separately.
 # 12/8/16 DJP: Added try, except to spw loop in case one is entirely flagged.
 # 12/8/16 DJP: Calculated, print noise for each spectrum.  Changed output layout.
+# 3/5/18 DJP: Changed clean to tclean, imaging in topocentric frequency to help with RFI identification.
+# 4/22/18 DJP: Changing split to oldsplit
+
 
  
 
@@ -42,7 +45,7 @@ for ii in seq:
         os.system("rm -rf images/targetcube_HIdet_spw"+str(ii)+".*")
 
     try:    
-        default('split')
+        default('oldsplit')
         vis=ms_active
         datacolumn='corrected'
         outputvis=targetfile
@@ -50,12 +53,12 @@ for ii in seq:
         spw =str(ii)
         width=4
         timebin='16s'
-        split()
+        oldsplit()
 
 # Make test cube of 10 mJy source, all channels
         logprint ('Make cube of 10 mJy source, all channels, Spw='+str(ii), logfileout='logs/testcubes.log')
 
-        default('clean')
+        default('tclean')
     
         image_name='targetcube_10mJy_spw'+str(ii)
         fieldid='deepfield'
@@ -71,14 +74,14 @@ for ii in seq:
         selectdata=False
         field=fieldid
         spw=''
-        mode='frequency'
+        specmode='cubedata'
         nterms=1
         niter=iteration
         gain=0.1
         gridmode=grid_mode
         wprojplanes=number_w
         threshold='0.0mJy'
-        psfmode='clark'
+        deconvolver='clark'
         imagermode='csclean'
         cyclefactor=1.5
         cyclespeedup=-1
@@ -90,19 +93,20 @@ for ii in seq:
         stokes='I'
         weighting='briggs'
         robust=0.8
-        uvtaper=False
+        uvtaper=[]
         modelimage=''
         restoringbeam=['']
+        pblimit=-0.2
         pbcor=False
         usescratch=False
         allowchunk=False
         async=False
-        clean()
+        tclean()
 
 # Make small cube of lowest z detection
         logprint ('Make cube of strongest pilot detection, Spw='+str(ii), logfileout='logs/testcubes.log')
 
-        default('clean')
+        default('tclean')
     
         image_name='targetcube_HIdet_spw'+str(ii)
         fieldid='deepfield'
@@ -118,14 +122,14 @@ for ii in seq:
         selectdata=False
         field=fieldid
         spw=''
-        mode='frequency'
+        specmode='cubedata'
         nterms=1
         niter=iteration
         gain=0.1
         gridmode=grid_mode
         wprojplanes=number_w
         threshold='0.0mJy'
-        psfmode='clark'
+        deconvolver='clark'
         imagermode='csclean'
         cyclefactor=1.5
         cyclespeedup=-1
@@ -137,14 +141,15 @@ for ii in seq:
         stokes='I'
         weighting='briggs'
         robust=0.8
-        uvtaper=False
+        uvtaper=[]
         modelimage=''
         restoringbeam=['']
+        pblimit=-0.2
         pbcor=False
         usescratch=False
         allowchunk=False
         async=False
-        clean()
+        tclean()
     
 #Extract spectrum for both cubes
         logprint ('Extract Spectra, Spw='+str(ii), logfileout='logs/testcubes.log')

@@ -21,6 +21,8 @@
 # 6/22/16 DJP:  Setting minsnr to original pipeline values.
 # 9/21/16 DJP:  Changed channel range for tst_gain_spw (only excluding 50 edge channels).  Moved flagmanager to end.
 # 10/28/16 DJP: Added backup of finalamp.gcal
+# 4/22/18 DJP: Changing flagging and split to oldsplit
+
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'start')
@@ -429,27 +431,67 @@ flagbackup=False
 async=False
 applycal()
 
-# Step 6: run RFLAG and extend
+# Step 6: run RFLAG 
+# New Flagging routines from XF
+logprint ("Initial Clipping & RFLAG of Phase Calibrator", logfileout='logs/phasecal.log')
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='0'
+spw='14'
+mode='clip'
+clipminmax=[0,30]
+action='apply'
+flagbackup=False
+flagdata()
 
-logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
+#This calculates timedev and freqdev for spw14
+default('flagdata')
+vis=ms_active
+datacolumn='corrected'
+field='0'
+spw='14'
+scan=''
+mode='rflag'
+timedev='tdev14_f0.txt'
+freqdev='fdev14_f0.txt'
+freqdevscale=1.0
+timedevscale=1.0
+extendflags=False
+action='calculate'
+flagdata()
 
-ff= float(0)   # This sets the field being flagged; here it is the phase cal, field 0.
+
+with open("tdev14_f0.txt","r") as data:
+    dictTime=ast.literal_eval(data.read())
+
+with open("fdev14_f0.txt","r") as data:
+    dictFreq=ast.literal_eval(data.read())
+
+timenoavg=dictTime["timedev"][0][2]
+freqnoavg=dictFreq["freqdev"][0][2]
+
+ff=float(0)
+scaling1=[2.4,2.1,1.9,1.3,1.2,1.2,1.1,1.1,1.1,1.1,1.0,1.0,1.0,1.0,1.0]
+scaling=np.asarray(scaling1)
+sigmacut=8.0
+freqd1noavg=scaling*freqnoavg*sigmacut
+timed1noavg=scaling*timenoavg*sigmacut
 
 default('flagdata')
 vis=ms_active
 mode='rflag'
-field='0'            # Hard-coded to field 0 as this is always phase cal
+field='0'
 spw='0~14'
 correlation=''
 ntime='scan'
 combinescans=False
 datacolumn='corrected'
-extendflags=False    # Explicitly set to False as default is True.  Extend is explicitly done later.  
-extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
+extendflags=False       
+extendpols=False      
 winsize=3
-# The following noise levels are taken from tests by XF.
-freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]
-timedev=[[ff,0.0,8.0],[ff,1.0,6.2],[ff,2.0,5.1],[ff,3.0,4.6],[ff,4.0,4.4],[ff,5.0,4.2],[ff,6.0,4.1],[ff,7.0,4.2],[ff,8.0,3.7],[ff,9.0,3.4],[ff,10.0,3.3],[ff,11.0,3.4],[ff,12.0,3.3],[ff,13.0,3.4],[ff,14.0,3.4]]
+freqdev=[[ff,0.0,freqd1noavg[0]],[ff,1.0,freqd1noavg[1]],[ff,2.0,freqd1noavg[2]],[ff,3.0,freqd1noavg[3]],[ff,4.0,freqd1noavg[4]],[ff,5.0,freqd1noavg[5]],[ff,6.0,freqd1noavg[6]],[ff,7.0,freqd1noavg[7]],[ff,8.0,freqd1noavg[8]],[ff,9.0,freqd1noavg[9]],[ff,10.0,freqd1noavg[10]],[ff,11.0,freqd1noavg[11]],[ff,12.0,freqd1noavg[12]],[ff,13.0,freqd1noavg[13]],[ff,14.0,freqd1noavg[14]]]
+timedev=[[ff,0.0,timed1noavg[0]],[ff,1.0,timed1noavg[1]],[ff,2.0,timed1noavg[2]],[ff,3.0,timed1noavg[3]],[ff,4.0,timed1noavg[4]],[ff,5.0,timed1noavg[5]],[ff,6.0,timed1noavg[6]],[ff,7.0,timed1noavg[7]],[ff,8.0,timed1noavg[8]],[ff,9.0,timed1noavg[9]],[ff,10.0,timed1noavg[10]],[ff,11.0,timed1noavg[11]],[ff,12.0,timed1noavg[12]],[ff,13.0,timed1noavg[13]],[ff,14.0,timed1noavg[14]]]
 timedevscale=1.0
 freqdevscale=1.0
 action='apply'
@@ -458,29 +500,58 @@ flagbackup=False
 savepars=True
 flagdata()
 
-# Extend flags
-default('flagdata')
-vis=ms_active
-mode='extend'
-field='0'            # Hard-coded to field 0 as this is always phase cal
-correlation=''
-ntime='scan'
-combinescans=False
-datacolumn='corrected'
-extendpols=False      
-growtime=70       
-growfreq=80       
-growaround=True      
-flagneartime=True       
-flagnearfreq=True       
-action='apply'
-display=''
-flagbackup=True
-savepars=True
-flagdata()
+
+# Old flagging routines
+#logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
+#
+#ff= float(0)   # This sets the field being flagged; here it is the phase cal, field 0.
+#
+#default('flagdata')
+#vis=ms_active
+#mode='rflag'
+#field='0'            # Hard-coded to field 0 as this is always phase cal
+#spw='0~14'
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendflags=False    # Explicitly set to False as default is True.  Extend is explicitly done later.  
+#extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
+#winsize=3
+## The following noise levels are taken from tests by XF.
+#freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]
+#timedev=[[ff,0.0,8.0],[ff,1.0,6.2],[ff,2.0,5.1],[ff,3.0,4.6],[ff,4.0,4.4],[ff,5.0,4.2],[ff,6.0,4.1],[ff,7.0,4.2],[ff,8.0,3.7],[ff,9.0,3.4],[ff,10.0,3.3],[ff,11.0,3.4],[ff,12.0,3.3],[ff,13.0,3.4],[ff,14.0,3.4]]
+#timedevscale=1.0
+#freqdevscale=1.0
+#action='apply'
+#display=''
+#flagbackup=False
+#savepars=True
+#flagdata()
+#
+## Extend flags
+#default('flagdata')
+#vis=ms_active
+#mode='extend'
+#field='0'            # Hard-coded to field 0 as this is always phase cal
+#correlation=''
+#ntime='scan'
+#combinescans=False
+#datacolumn='corrected'
+#extendpols=False      
+#growtime=70       
+#growfreq=80       
+#growaround=True      
+#flagneartime=True       
+#flagnearfreq=True       
+#action='apply'
+#display=''
+#flagbackup=True
+#savepars=True
+#flagdata()
 
 # Summary of flagging, after RFLAG+extend (for testing purposes only)
-logprint ("Summary of flags after RFLAG+extend", logfileout='logs/phasecal.log')
+logprint ("Summary of flags after Flagging", logfileout='logs/phasecal.log')
 default('flagdata')
 vis=ms_active
 mode='summary'
@@ -917,7 +988,7 @@ if os.path.exists(output_ms):
     os.system("rm -rf "+output_ms)
     
 #Split the phase cal.
-default('split')
+default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
@@ -935,7 +1006,7 @@ correlation=''
 observation=''
 keepflags=False
 keepmms=False
-split()
+oldsplit()
 
 # Use plotms to make plot of amplitude vs. phase, divided by spw
 seq=range(0,15)
@@ -985,7 +1056,7 @@ seq=range(0,15)
 #Image phase cal: 
 for ii in seq:
     print 'STARTS IMAGING PHASE CALIBRATOR OF SPW='+str(ii)
-    default('clean')
+    default('tclean')
     image_name='phasecalibrator_spw'+str(ii)
     fieldid='J0943*'
     grid_mode=''
@@ -993,19 +1064,21 @@ for ii in seq:
     image_size=[512,512]
     iteration=1000
     mask_name=['']
+    
     vis=output_ms
     imagename=image_name
-    selectdata=False
+    selectdata=True
+    datacolumn='data'
     field=fieldid
     spw=str(ii)
-    mode='mfs'
+    specmode='mfs'
     nterms=1
     niter=iteration
     gain=0.1
     gridmode=grid_mode
     wprojplanes=number_w
     threshold='0.0mJy'
-    psfmode='clark'
+    deconvolver='clark'
     imagermode='csclean'
     cyclefactor=1.5
     cyclespeedup=-1
@@ -1017,14 +1090,16 @@ for ii in seq:
     stokes='I'
     weighting='briggs'
     robust=0.8
-    uvtaper=False
+    uvtaper=[]
     modelimage=''
     restoringbeam=['']
+    pblimit=-0.2
     pbcor=False
     usescratch=False
     allowchunk=False
     async=False
-    clean()
+    tclean()
+    
 
 #     Calculate bmaj, bmin, peak, and rms for images of flux calibrator in each spw.
 #     Output results as text file and plots of these values.
