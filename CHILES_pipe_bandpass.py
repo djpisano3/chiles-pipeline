@@ -28,6 +28,9 @@
 # 1/10/17 DJP: Delete individual png bandpass plots as information is already in bandpass.pdf
 # 5/13/17 DJP: Removed plotbandpass and replace with using plotms for refAnt.
 # 4/22/18 DJP: Changing flagging and split to oldsplit
+# 8/29/18 DJP: Changed field='2' to field='1331+305=3C286'.  
+# 8/29/18 DJP: Including masks to avoid bad RFI while calibrating
+# 10/8/18 DJP: Including flagging percentage vs. uvdist, using flags instead of masks.
 
 #Part I: define some variables that will be used later
 import copy
@@ -79,7 +82,113 @@ for ispw in range(numSpws):
         tst_delay_spw=tst_delay_spw+str(ispw)+':'+str(endch1)+'~'+str(endch2)
         all_spw=all_spw+str(ispw)
 
+# Avoid solving for baseline on edge channels
 tst_bpass_spw='0~14:50~1997'
+
+#Flag regions that are badly affected by RFI
+flag_spw=('*:952.6~952.9MHz,'
+'*:977.64~977.72MHz,'
+'*:992.4~992.46MHz,'
+'*:1029.35~1030.65MHz,'
+'*:1040.8~1041.3MHz,'
+'*:1042.7~1043.1MHz,'
+'*:1044.7~1045.2MHz,'
+'*:1045.8~1046.3MHz,'
+'*:1046.8~1047.2MHz,'
+'*:1048.75~1049.3MHz,'
+'*:1051.8~1052.25MHz,'
+'*:1052.85~1053.15MHz,'
+'*:1053.9~1054.15MHz,'
+'*:1055.9~1056.2MHz,'
+'*:1056.85~1057.2MHz,'
+'*:1059.7~1060.5MHz,'
+'*:1060.85~1061.2MHz,'
+'*:1061.85~1062.2MHz,'
+'*:1063.8~1064.5MHz,'
+'*:1064.8~1065.2MHz,'
+'*:1066.8~1067.2MHz,'
+'*:1067.8~1068.2MHz,'
+'*:1068.8~1069.2MHz,'
+'*:1069.8~1070.2MHz,'
+'*:1070.8~1071.2MHz,'
+'*:1071.8~1072.2MHz,'
+'*:1072.8~1073.2MHz,'
+'*:1075.8~1076.2MHz,'
+'*:1076.8~1077.2MHz,'
+'*:1077.8~1078.2MHz,'
+'*:1079.8~1080.2MHz,'
+'*:1080.8~1081.2MHz,'
+'*:1081.8~1082.2MHz,'
+'*:1082.8~1083.2MHz,'
+'*:1083.8~1084.2MHz,'
+'*:1084.8~1085MHz,'
+'*:1085.8~1086.2MHz,'
+'*:1087.96~1088.04MHz,'
+'*:1088.6~1091.6MHz,'
+'*:1091.96~1092.04MHz,'
+'*:1093.8~1094.2MHz,'
+'*:1094.8~1095.2MHz,'
+'*:1096.8~1097.2MHz,'
+'*:1097.8~1098.2MHz,'
+'*:1101.9~1102.1 MHz,'
+'*:1102.8~1103.2MHz,'
+'*:1103.8~1104.2MHz,'
+'*:1104.7~1105.2MHz,'
+'*:1105.8~1106.2MHz,'
+'*:1106.8~1107.2MHz,'
+'*:1108.8~1109.2MHz,'
+'*:1109.8~1110.2MHz,'
+'*:1110.8~1111.2MHz,'
+'*:1111.8~1112.2MHz,'
+'*:1115.8~1116.2MHz,'
+'*:1116.8~1117.2MHz,'
+'*:1117.8~1118.2MHz,'
+'*:1118.8~1119.2MHz,'
+'*:1119.8~1120.2MHz,'
+'*:1120.8~1121.2MHz,'
+'*:1121.8~1122.2MHz,'
+'*:1122.8~1123.2MHz,'
+'*:1123.8~1124.2MHz,'
+'*:1124.8~1125.2MHz,'
+'*:1125.8~1126.2MHz,'
+'*:1126.8~1127.2MHz,'
+'*:1129.8~1130.2MHz,'
+'*:1130.8~1131.2MHz,'
+'*:1131.8~1132.2MHz,'
+'*:1133.8~1134.2MHz,'
+'*:1134.8~1135.2MHz,'
+'*:1136.8~1137.2MHz,'
+'*:1137.8~1138.2MHz,'
+'*:1138.8~1139.2MHz,'
+'*:1139.8~1140.2MHz,'
+'*:1143.8~1144.2MHz,'
+'*:1146.8~1147.2MHz,'
+'*:1148.8~1149.2MHz,'
+'*:1149.8~1150.2MHz,'
+'*:1153.04~1153.08MHz,'
+'*:1160.9~1161.1MHz,'
+'*:1165.9~1166.3MHz,'
+'*:1167~1186MHz,'
+'*:1186.65~1186.75MHz,'
+'*:1201.8~1202.2MHz,'
+'*:1224~1230MHz,'
+'*:1242~1250MHz,'
+'*:1253.6~1255.2MHz,'
+'*:1293.3~1295.7MHz,'
+'*:1320~1322MHz,'
+'*:1326.5~1328.5MHz,'
+'*:1331~1334MHz,'
+'*:1336.5~1338MHz,'
+'*:1379~1383MHz')
+
+default('flagdata')
+vis=ms_active
+field='1331+305=3C286'
+spw=flag_spw
+mode='manual'
+action='apply'
+flagdata()
+
 
 # The following parameters are set in the initial pipeline script by default or user input.
 ##Set minimum # of baselines need for a solution to 8, based on experience
@@ -101,14 +210,14 @@ logprint ("Setup initial calibration tables", logfileout='logs/bandpass.log')
 default('delmod')
 vis=ms_active
 otf=True
-field='2'
+field='1331+305=3C286'
 scr=False
 delmod()
 
 #1 setjy:
 default('setjy')
 vis=ms_active
-field='2'
+field='1331+305=3C286'
 spw=''
 selectdata=False
 model='3C286_L.im'
@@ -161,7 +270,7 @@ logprint ("Initial delay, gain, BP calibration", logfileout='logs/bandpass.log')
 default('gaincal')
 vis=ms_active
 caltable='testdelayinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=tst_delay_spw
 intent=''
 selectdata=False
@@ -193,7 +302,7 @@ GainTables.append('testdelayinitialgain.g')
 default('gaincal')
 vis=ms_active
 caltable='initialdelay.k'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=''
 intent=''
 selectdata=False
@@ -221,7 +330,7 @@ gaincal()
 #specify spw14 to apply delays from there
 
 spwac=14
-spwmapdelayarray=pl.zeros(15,int)
+spwmapdelayarray=np.zeros(15,int)
 spwmapdelayarray[0:15]=spwac
 spwmapdelay=list(spwmapdelayarray)
 
@@ -235,7 +344,7 @@ SpwMapValues.append(spwmapdelay)
 default('gaincal')
 vis=ms_active
 caltable='initialBPinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=tst_bpass_spw
 selectdata=False
 solint='int'
@@ -268,9 +377,10 @@ BPSpwMapValues.append([])
 default('bandpass')
 vis=ms_active
 caltable='initialBPcal.b'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #spw='0~14:64~1982'
-spw='0~14'           # Solve BP for all channels in spectral line spws.
+#spw='0~14'           # Solve BP for all channels in spectral line spws.
+spw=tst_bpass_spw     # Only solve in clean windows. 
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'
@@ -302,7 +412,7 @@ AllSpwMapValues.append([])
 #7: #Apply calibrations to the flux calibrator:
 default('applycal')
 vis=ms_active
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=''
 intent=''
 selectdata=True
@@ -323,7 +433,7 @@ logprint ("Flagging flux calibrator by Clipping & RFLAG", logfileout='logs/bandp
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='2'
+field='1331+305=3C286'
 spw='14'
 mode='clip'
 clipminmax=[0,50]
@@ -335,7 +445,7 @@ flagdata()
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='2'
+field='1331+305=3C286'
 spw='14'
 scan=''
 mode='rflag'
@@ -367,7 +477,7 @@ timed1noavg=scaling*timenoavg*sigmacut
 default('flagdata')
 vis=ms_active
 mode='rflag'
-field='2'
+field='1331+305=3C286'
 spw='0~14'
 correlation=''
 ntime='scan'
@@ -395,7 +505,7 @@ flagdata()
 #default('flagdata')
 #vis=ms_active
 #mode='rflag'
-#field='2'            # Hard-coded to field 2 as this is always 3C286
+#field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #spw='0~14'
 #correlation=''
 #ntime='scan'
@@ -418,7 +528,7 @@ flagdata()
 #default('flagdata')
 #vis=ms_active
 #mode='extend'
-#field='2'            # Hard-coded to field 2 as this is always 3C286
+#field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #correlation=''
 #ntime='scan'
 #combinescans=False
@@ -439,12 +549,13 @@ flagdata()
 logprint ("Summary of flags after Flagging", logfileout='logs/bandpass.log')
 default('flagdata')
 vis=ms_active
-field='2'       # Only flagging 3C286, so don't need stats on other sources.
+field='1331+305=3C286'       # Only flagging 3C286, so don't need stats on other sources.
 mode='summary'
 spw='0~14'
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
+basecnt=True
 action='calculate'
 s_b=flagdata()
 
@@ -460,7 +571,7 @@ logprint ("Final delay, gain, BP calibration", logfileout='logs/bandpass.log')
 default('gaincal')
 vis=ms_active
 caltable='finaldelayinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=tst_delay_spw
 intent=''
 selectdata=False
@@ -492,7 +603,7 @@ DelayTables.append('finaldelayinitialgain.g')
 default('gaincal')
 vis=ms_active
 caltable='finaldelay.k'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=''
 intent=''
 selectdata=False
@@ -520,7 +631,7 @@ gaincal()
 #specify spw14 to apply delays from there
 
 spwac=14
-spwmapdelayarray=pl.zeros(15,int)
+spwmapdelayarray=np.zeros(15,int)
 spwmapdelayarray[0:15]=spwac
 spwmapdelay=list(spwmapdelayarray)
 
@@ -534,7 +645,7 @@ SpwMapValues.append(spwmapdelay)
 default('gaincal')
 vis=ms_active
 caltable='finalBPinitialgain.g'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=tst_bpass_spw
 selectdata=False
 solint='int'
@@ -543,7 +654,7 @@ preavg=-1.0
 refant=refAnt
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 minblperant=minBL_for_cal
-minsnr=5.0
+minsnr=3.0
 solnorm=False
 gaintype='G'
 smodel=[]
@@ -567,9 +678,10 @@ BPSpwMapValues.append([])
 default('bandpass')
 vis=ms_active
 caltable='finalBPcal.b'
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #spw='0~14:64~1982'
-spw='0~14'           # Solve BP for all channels in spectral line spws.
+#spw='0~14'           # Solve BP for all channels in spectral line spws.
+spw=tst_bpass_spw
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'
@@ -602,7 +714,7 @@ AllSpwMapValues.append([])
 #Apply calibrations to the flux calibrator:
 default('applycal')
 vis=ms_active
-field='2'            # Hard-coded to field 2 as this is always 3C286
+field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 spw=''
 intent=''
 selectdata=True
@@ -639,6 +751,57 @@ logprint ("Flag column saved to "+versionname, logfileout='logs/bandpass.log')
 #Part V: Data inspection
 logprint ("Create data inspection plots", logfileout='logs/bandpass.log')
 
+# Make plot of flagging statistics
+# s_b is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_b['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'BP Flagging: '+ str(flux_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('bp_flag_uvdist.png')
+os.system("mv bp_flag_uvdist.png plots/.") 
+
+# Make plot of percentage of data flagged as a function of channel (for both correlations combined):
+flag_frac=[]
+ct=-1
+chan=[]
+freq=[]
+flagged=[]
+totals=[]
+# Extract frequency of first channel of spw=0 from listobs output
+nu0=reference_frequencies[0]/1.e6 #get reference frequency in MHz
+dnu=0.015625 # channel width in MHz
+for s in range(15):
+    for c in range(2048):
+        ct+=1
+        chan.append(ct)
+        freq.append(nu0+dnu*ct)
+        flagged.append(s_b['spw:channel'][str(s)+':'+str(c)]['flagged'])
+        totals.append(s_b['spw:channel'][str(s)+':'+str(c)]['total'])
+        flag_frac.append(flagged[ct]/totals[ct])
+
+fig=pylab.figure()
+pylab.plot(freq,flag_frac,'k-')
+pylab.xlim(940.,1445.)
+pylab.xlabel('Frequency [MHz]')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("bp_flag.png")
+pylab.close(fig)
 
 #16: plot delays
 nplots=int(numAntenna/3)
@@ -681,36 +844,31 @@ seq=range(0,15)
 for ii in seq:
     default('plotms')
     vis='finalBPcal.b'
-    field='2'        # Only for 3C286
+    field='1331+305=3C286'        # Only for 3C286
     xaxis='freq'
     yaxis='amp'
     xdatacolumn=''
     ydatacolumn=''
-    averagedata=True
-    avgtime='1e5'
-    avgscan=True
-    avgbaseline=True
-    antenna=refAnt
-    scalar=False
+    averagedata=False
     spw=str(ii)
-    avgspw=False
+    iteraxis='spw'
     showlegend=False
     coloraxis='Antenna1'
     title='Spw'+str(ii)+': Amp v. Freq'
     showgui=False
     clearplots=True
-    plotfile='bpamp_spw'+str(ii)+'.png'
+    plotfile='bpamp.png'
     plotms()
     
     yaxis='phase'
     title='Spw'+str(ii)+': Phase v. Freq'
-    plotfile='bpphase_spw'+str(ii)+'.png'
+    plotfile='bpphase.png'
     plotms()
 
 #Plot UV spectrum (averaged over all baselines & time) of flux calibrator
 default('plotms')
 vis=ms_active   
-field='2'        # Only for 3C286
+field='1331+305=3C286'        # Only for 3C286
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -747,7 +905,7 @@ default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
-field='2'
+field='1331+305=3C286'
 spw='0~14:128~1920'    # Extend the region used for imaging/plots, only excluding the edges.
 width='1793'
 antenna=''
@@ -969,8 +1127,8 @@ wlog.write('<li> Bandpass solutions (amplitude and phase) for reference antenna:
 wlog.write('<li> Color coded by antenna, both polarizations shown \n')
 wlog.write('<table> \n')
 for ii in seq:
-    wlog.write('<tr><td><img src="plots/bpamp_spw'+str(ii)+'.png"></td>\n')
-    wlog.write('<td><img src="plots/bpphase_spw'+str(ii)+'.png"></td></tr>\n')
+    wlog.write('<tr><td><img src="plots/bpamp_Spw'+str(ii)+'.png"></td>\n')
+    wlog.write('<td><img src="plots/bpphase_Spw'+str(ii)+'.png"></td></tr>\n')
 wlog.write('</table> \n')
 wlog.write('<br>')
 wlog.write('<li> Amp vs. Phase (averaged over all channels in a spw): \n')
@@ -990,6 +1148,12 @@ wlog.write('<li> Measured properties of flux calibrator: \n')
 wlog.write('<br><img src="plots/fluxcal_beamsize.png">\n')
 wlog.write('<br><img src="plots/fluxcal_peak.png">\n')
 wlog.write('<br><img src="plots/fluxcal_rms.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. frequency:\n')
+wlog.write('<li><br><img src="./plots/bp_flag.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. uvdist\n')
+wlog.write('<li><br><img src="./plots/bp_flag_uvdist.png"></li>\n')
 wlog.write('<br>\n')
 wlog.write('<br> Percentage of 3C286 data flagged: '+str(flux_flag*100)+'\n')
 wlog.write('<br>')

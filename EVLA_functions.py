@@ -6,6 +6,11 @@
 # 08/26/15 D.J. Pisano: (already updated for CASA 4.4)
 #       also removed functions that are not needed for CHILES and
 #       implemented uvrange for all calibrations (of 1500m).
+# 10/08/18 D.J. Pisano: Including functions specifically to get uvdist of
+#       all baselines, and construct plots of flagging percentage vs. uvdist.
+#       This code was written by Nick Luber.  
+# 10/08/18 D.J. Pisano:  Included functions used to extract data on images
+#
 ######################################################################
 #
 # Copyright (C) 2013
@@ -1814,3 +1819,167 @@ spwac=14
 spwmapdelayarray=pl.zeros(15,int)
 spwmapdelayarray[0:15]=spwac
 spwmapdelay=list(spwmapdelayarray)
+
+######################################################################
+# These are the functions used for creating flagging percentage vs. uvdist
+# They were written by Nick Luber.
+
+def get_antenna_data(visibility):
+    '''make a dictionary for each antenna entry and xyz coordinates'''
+
+    # Get VLA antenna uvdist
+    ms.open(visibility)
+    ms.selectinit()
+    ms.selectchannel(1,0,1,1) #look at daya just for first channel - easily translates
+    rec = ms.getdata(['antenna1','antenna2','uvdist']) #get the points I need
+    ms.close()
+    return rec
+
+
+def create_baseline_dict(visibility, antdata):
+    '''create a dictionary to hold all UVdists for antenna pairs and correlate them to station IDs'''
+
+    # Get VLA antenna ID
+    msmd.open(visibility) #open file in metadata style
+    antenna_names = msmd.antennanames() #returns a list that corresponds to antenna ID
+    msmd.close()
+
+    ##Create dictionary
+    baseline_pairs = {}
+    i = 0
+    while i <= antdata['antenna1'].max(): #create a dictionary antenna for each antenna pair
+        j = i + 1
+        while j <= antdata['antenna2'].max():
+            temp_dict_key = str(antenna_names[i]) + '&&' + str(antenna_names[j])
+            baseline_pairs[temp_dict_key] = []
+            j += 1
+        i += 1
+    #add distances to dictionary
+    i = 0
+    while i < len(antdata['antenna1']):
+        temp_dict_key = str(antenna_names[antdata['antenna1'][i]]) + '&&' + str(antenna_names[antdata['antenna2'][i]])
+        baseline_pairs[temp_dict_key].append(antdata['uvdist'][i])
+        i += 1
+
+    return baseline_pairs
+
+
+def flag_match_baseline(flgdata, baselines):
+    '''match the CASA flagging data to the baseline dictionaries and return flagging statitistics'''
+
+    flagging_data = [[],[]] #list to fill data with
+    i = 0
+    dictkeys = list(flgdata.keys())
+    while i < len(dictkeys):
+        flagging_data[0].append(uvdist_max(baselines[dictkeys[i]])[0])
+        flagging_data[1].append([flgdata[dictkeys[i]]['flagged'],flgdata[dictkeys[i]]['total']])
+        i += 1
+
+    return flagging_data
+
+def array_baseline(arrayext):
+    '''get the max baseline length in kilometers - to correlate with histogram range'''
+
+    if arrayext == 'A':
+        return 36500.
+    if arrayext == 'B':
+        return 11200.
+    if arrayext == 'C':
+        return 3500.
+    if arrayext == 'D':
+        return 1100.
+
+def bin_statistics(dpoints, arraytype, nbins):
+    '''bin the data based on a desired width'''
+
+    binned = [[],[]]
+    i = 0
+    width = int(array_baseline(arraytype)/nbins)
+    flg_tracker, tot_tracker = 0, 0
+    while i < nbins: #loop through number of bins
+        j = 0
+        temp_flg, temp_total = 0., 0. #to be filled with flagging stats
+        while j < len(dpoints[0]): #loop through data points
+            if dpoints[0][j] >= (i*width) and dpoints[0][j] <= ((i+1)*width):
+                temp_flg += dpoints[1][j][0]
+                temp_total += dpoints[1][j][1]
+                flg_tracker += dpoints[1][j][0]
+                tot_tracker += dpoints[1][j][1]
+            j += 1
+        binned[0].append(i*width)
+        if temp_total == 0:
+            binned[1].append(0)
+        else:
+            binned[1].append(temp_flg/temp_total)
+        i += 1
+    
+    total = (flg_tracker/tot_tracker) * 100.
+    print('Total data flagged: ' + str(total)[:5] + '%')
+    return np.array(binned)
+
+
+def flag_match_baseline_stats(flgdata, baselines):
+    '''match the CASA flagging data to the baseline dictionaries and return flagging statitistics'''
+
+    dist_data = [[],[]] #list to fill data with
+    i = 0
+    dictkeys = list(flgdata.keys())
+    while i < len(dictkeys):
+        temp = uvdist_max(baselines[dictkeys[i]])
+        dist_data[0].append(temp[0])
+        dist_data[1].append(temp[1])
+        i += 1
+
+    return np.array(dist_data)
+
+def uvdist_max(flg_data):
+    '''find the max of the uvdist distribution'''
+
+    yvals, edges = np.histogram(flg_data, bins = 20) #get some statistics on the histograms
+    max_index = yvals.argmax() #index of maximum value
+    uvdist_max = (edges[max_index] + edges[max_index+1])/2.
+    return [uvdist_max, np.std(flg_data)]
+
+
+def get_beams(imagename, start, end):
+    '''this gets the major and minor axis for the beam'''
+    
+    #CASA task to get beams
+    header = imhead(imagename)
+    
+    #focus on just the beams
+    dict_unsorted_beams = header['perplanebeams']['beams']
+    
+    #list of list of beam sizes
+    data = []
+    
+    #extract the beam axis sizes and add them to data list
+    i = int(start)
+    while i <= end:
+        
+        temp_list = []#this is what the information from this loop goes in
+        i_string = str(i) #make index a string for dictionary reading
+        dict_handle = '*' + i_string #add the astericks, silly CASA
+        temp_dict = dict_unsorted_beams[dict_handle]#reads into beams
+        
+        #get the actual beam sizes
+        majorval = temp_dict['*0']['major']['value']
+        minorval = temp_dict['*0']['minor']['value']
+        
+        #append the beam sizes
+        temp_list.append(majorval)
+        temp_list.append(minorval)
+        
+        #add this to my list of beam sizes
+        data.append(temp_list)
+        i += 1
+    
+    #turn data intp an array that way we can slice    
+    data_array = np.array(data)
+    
+    #slice the array into 2 arrays that have major and minor axis
+    major = data_array[:,0]
+    minor = data_array[:,1]
+    
+    final = [major, minor]#return a list of the two length arrays
+    return final

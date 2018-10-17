@@ -213,12 +213,22 @@ except NameError:
 # is reset to "n" after doing the smoothing in EVLA_pipe_hanning.py.
 
 #EM: add bad antenna question
-badants=raw_input("Enter a list of bad antennas to flag in HI data, comma separated (e.g., ea01,ea02,ea20), hit enter if none: ")
+badants_already_set = 1
+try:
+    badants
+except NameError:
+    badants_already_set = 0
+    badants=raw_input("Enter a list of bad antennas to flag in HI data, comma separated (e.g., ea01,ea02,ea20), hit enter if none: ")
 
 #DJP: select reference antenna.
 # This will be done each time pipeline is started so user can utilize information
 # from pipeline runs.  (8/27/15 DJP)
 
-refAnt=raw_input("Enter name of one or more reference antenna(s) (e.g. ea01, ea02, etc.; leave blank if not needed yet): ")
+refant_already_set = 1
+try:
+    refAnt
+except NameError:
+    refant_already_set = 0
+    refAnt=raw_input("Enter name of one or more reference antenna(s) (e.g. ea01, ea02, etc.; leave blank if not needed yet): ")
 
 logprint ("Finished CHILES_pipe_startup.py", logfileout='logs/startup.log')

@@ -22,6 +22,8 @@
 # 9/21/16 DJP:  Changed channel range for tst_gain_spw (only excluding 50 edge channels).  Moved flagmanager to end.
 # 10/28/16 DJP: Added backup of finalamp.gcal
 # 4/22/18 DJP: Changing flagging and split to oldsplit
+# 8/29/18 DJP: Changing field numbers to field names.
+# 10/8/18 DJP: Including flagging percentage vs. uvdist, use flags instead of masks.
 
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
@@ -54,7 +56,7 @@ if os.path.exists('finalflux.gcal'):
     default('delmod')
     vis=ms_active
     otf=True
-    field='0'  # Hard-coded for phase calibrator
+    field='J0943-0819'  # Hard-coded for phase calibrator
     scr=False
     delmod()
 os.system("rm -rf images/phasecalibrator_spw*.*")
@@ -71,7 +73,7 @@ uvr_cal='>1500m'
 # HG : adding the spwmap for prior cals. & adding the conditional statements for antposcal.p
 
 spwac=14
-spwmapdelayarray=pl.zeros(15,int)
+spwmapdelayarray=np.zeros(15,int)
 spwmapdelayarray[0:15]=spwac
 spwmapdelay=list(spwmapdelayarray)
 
@@ -85,13 +87,23 @@ if os.path.exists('antposcal.p')==False:
   priorspwmap=[[],spwmapdelay,[]]
 
 
-#Set channel/spw range to use for calibrations (based on BP code)
+# Set channel/spw range to use for calibrations (based on BP code)
 tst_gain_spw=tst_bpass_spw
 
+# Flagging regions that are generally affected by RFI, using flag_spw from bandpass module
+default('flagdata')
+vis=ms_active
+field='J0943-0819'
+spw=flag_spw
+mode='manual'
+action='apply'
+flagdata()
+
+
 # This module is hard-coded for CHILES, so:
-# Field='0' is J0943-0819, phase calibrator
-# Field='2' is 1331+305 (3C286), flux & bandpass calibrator
-# Field='1' is "deepfield", the target
+# field='J0943-0819' is J0943-0819, phase calibrator
+# Field='1331+305=3C286', flux & bandpass calibrator
+# Field='deepfield', the target
 
 
   
@@ -104,7 +116,7 @@ logprint ("Running initial gaincal", logfileout='logs/phasecal.log')
 default('gaincal')
 vis=ms_active
 caltable='initialphase.gcal'
-field='0,2'
+field='J0943-0819,1331+305=3C286'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -143,7 +155,7 @@ SpwMapValues.append([])
 default('gaincal')
 vis=ms_active
 caltable='initialamp.gcal'
-field='0,2'
+field='J0943-0819,1331+305=3C286'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -183,8 +195,8 @@ default('fluxscale')
 vis=ms_active
 caltable='initialamp.gcal'
 fluxtable='initialflux.gcal'
-reference='2'      # Reference field is always 3C286
-transfer=['0']
+reference='1331+305=3C286'      # Reference field is always 3C286
+transfer=['J0943-0819']
 listfile=''
 append=False
 refspwmap=[-1]        
@@ -387,17 +399,17 @@ AllSpwMapValues.append([])
 
 # HG: set gainfield appropriately depending if antposcal.p exists or not.  
 if os.path.exists('antposcal.p')==True:  
-  PhaseFields=['','','2','2','0','0','0']
-  FluxFields =['','','2','2','2','2','2']
+  PhaseFields=['','','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
+  FluxFields =['','','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286']
 
 if os.path.exists('antposcal.p')==False:
-  PhaseFields=['','2','2','0','0','0']
-  FluxFields =['','2','2','2','2','2']
+  PhaseFields=['','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
+  FluxFields =['','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286']
 
 
 default('applycal')
 vis=ms_active
-field='0'            # Apply one calibration to phase cal
+field='J0943-0819'            # Apply one calibration to phase cal
 spw=''
 intent=''
 selectdata=True
@@ -415,7 +427,7 @@ applycal()
 
 default('applycal')
 vis=ms_active
-field='2'            # Apply same calibration to flux cal
+field='1331+305=3C286'            # Apply same calibration to flux cal
 spw=''
 intent=''
 selectdata=True
@@ -437,7 +449,7 @@ logprint ("Initial Clipping & RFLAG of Phase Calibrator", logfileout='logs/phase
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='0'
+field='J0943-0819'
 spw='14'
 mode='clip'
 clipminmax=[0,30]
@@ -449,7 +461,7 @@ flagdata()
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='0'
+field='J0943-0819'
 spw='14'
 scan=''
 mode='rflag'
@@ -481,7 +493,7 @@ timed1noavg=scaling*timenoavg*sigmacut
 default('flagdata')
 vis=ms_active
 mode='rflag'
-field='0'
+field='J0943-0819'
 spw='0~14'
 correlation=''
 ntime='scan'
@@ -509,7 +521,7 @@ flagdata()
 #default('flagdata')
 #vis=ms_active
 #mode='rflag'
-#field='0'            # Hard-coded to field 0 as this is always phase cal
+#field='J0943-0819'            # Hard-coded to field 0 as this is always phase cal
 #spw='0~14'
 #correlation=''
 #ntime='scan'
@@ -533,7 +545,7 @@ flagdata()
 #default('flagdata')
 #vis=ms_active
 #mode='extend'
-#field='0'            # Hard-coded to field 0 as this is always phase cal
+#field='J0943-0819'            # Hard-coded to field 0 as this is always phase cal
 #correlation=''
 #ntime='scan'
 #combinescans=False
@@ -556,10 +568,11 @@ default('flagdata')
 vis=ms_active
 mode='summary'
 spw='0~14'
-field='0'     # Only phase calibrator getting flagged so only source to check.
+field='J0943-0819'     # Only phase calibrator getting flagged so only source to check.
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
+basecnt = True
 action='calculate'
 s_p=flagdata()
 
@@ -575,7 +588,7 @@ logprint ("Running final gaincal", logfileout='logs/phasecal.log')
 default('gaincal')
 vis=ms_active
 caltable='finalphase_int.gcal'
-field='0,2'
+field='J0943-0819,1331+305=3C286'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -603,7 +616,7 @@ gaincal()
 default('gaincal')
 vis=ms_active
 caltable='finalphase_scan.gcal'
-field='0,2'
+field='J0943-0819,1331+305=3C286'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -638,7 +651,7 @@ SpwMapValues.append([])
 default('gaincal')
 vis=ms_active
 caltable='finalamp.gcal'
-field='0,2'
+field='J0943-0819,1331+305=3C286'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -672,7 +685,7 @@ logprint ("Flux densities will be written to "+fluxscale_output, logfileout='log
 default('delmod')
 vis=ms_active
 otf=True
-field='0'  # Hard-coded for phase calibrator
+field='J0943-0819'  # Hard-coded for phase calibrator
 scr=False
 delmod()
 
@@ -682,8 +695,8 @@ default('fluxscale')
 vis=ms_active
 caltable='finalamp.gcal'
 fluxtable='finalflux.gcal'
-reference='2'
-transfer=['0']
+reference='1331+305=3C286'
+transfer=['J0943-0819']
 listfile=''
 append=False
 refspwmap=[-1]        
@@ -889,17 +902,17 @@ os.system('cp finalamp.gcal finalamp_backup.gcal')
 
 # HG: set gainfield appropriately depending if antposcal.p exists or not.  
 if os.path.exists('antposcal.p')==True:  
-  PhaseFields=['','','2','2','0','0','0']
-  FluxFields =['','','2','2','2','2','2']
+  PhaseFields=['','','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
+  FluxFields =['','','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286']
 
 if os.path.exists('antposcal.p')==False:
-  PhaseFields=['','2','2','0','0','0']
-  FluxFields =['','2','2','2','2','2']
+  PhaseFields=['','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
+  FluxFields =['','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286','1331+305=3C286']
 
 
 default('applycal')
 vis=ms_active
-field='0'            # Apply final calibration to phase cal
+field='J0943-0819'            # Apply final calibration to phase cal
 spw=''
 intent=''
 selectdata=True
@@ -917,7 +930,7 @@ applycal()
 
 default('applycal')
 vis=ms_active
-field='2'            # Apply same calibration to phase cal
+field='1331+305=3C286'            # Apply same calibration to phase cal
 spw=''
 intent=''
 selectdata=True
@@ -952,10 +965,64 @@ logprint ("Flag column saved to "+versionname, logfileout='logs/phasecal.log')
 
 logprint ("Making diagnostic plots", logfileout='logs/phasecal.log')
 
+# Make plot of flagging statistics
+# s_p is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_p['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'Phase Cal Flagging: '+ str(phase_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('phase_flag_uvdist.png')
+pylab.close()
+
+os.system("mv phase_flag_uvdist.png plots/.") 
+
+# Make plot of percentage of data flagged as a function of channel (for both correlations combined):
+flag_frac=[]
+ct=-1
+chan=[]
+freq=[]
+flagged=[]
+totals=[]
+# Extract frequency of first channel of spw=0 from listobs output
+nu0=reference_frequencies[0]/1.e6 #get reference frequency in MHz
+dnu=0.015625 # channel width in MHz
+for s in range(15):
+    for c in range(2048):
+        ct+=1
+        chan.append(ct)
+        freq.append(nu0+dnu*ct)
+        flagged.append(s_p['spw:channel'][str(s)+':'+str(c)]['flagged'])
+        totals.append(s_p['spw:channel'][str(s)+':'+str(c)]['total'])
+        flag_frac.append(flagged[ct]/totals[ct])
+
+fig=pylab.figure()
+pylab.plot(freq,flag_frac,'k-')
+pylab.xlim(940.,1445.)
+pylab.xlabel('Frequency [MHz]')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("phase_flag.png")
+pylab.close(fig)
+
 #Plot UV spectrum (averaged over all baselines & time) of phase calibrator
 default('plotms')
 vis=ms_active   
-field='0'        # Only for J0943
+field='J0943-0819'        # Only for J0943
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -992,7 +1059,7 @@ default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
-field='0'
+field='J0943-0819'
 spw='0~14:128~1920'  # Average over all channels, except the very edges
 width='1793'
 antenna=''
@@ -1204,6 +1271,8 @@ plotcal()
 #Move plots, images to sub-directory
 
 os.system("mv *.png plots")
+if os.path.exists('images')==False:
+    os.system("mkdir images")
 os.system("mv phasecalibrator_spw*.* images")
 
 #Create webpage with results
@@ -1244,6 +1313,12 @@ wlog.write('<li> Measured properties of phase calibrator: \n')
 wlog.write('<br><img src="plots/phasecal_beamsize.png">\n')
 wlog.write('<br><img src="plots/phasecal_peak.png">\n')
 wlog.write('<br><img src="plots/phasecal_rms.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. frequency:\n')
+wlog.write('<li><br><img src="./plots/phase_flag.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. uvdist\n')
+wlog.write('<li><br><img src="./plots/phase_flag_uvdist.png"></li>\n')
 wlog.write('<br>\n')
 wlog.write('<br> Percentage of J0943 data flagged: '+str(phase_flag*100)+'\n')
 wlog.write('<br>')

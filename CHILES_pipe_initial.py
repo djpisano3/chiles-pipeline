@@ -1,4 +1,4 @@
-# CHILES_pipeline_initial.py
+# CHILES_pipe_initial.py
 # CHILES pipeline, first module
 # based on the EVLA pipeline, the past CHILES pipeline, the CHILES AIPS 
 # pipeline, and work done by Ximena, this pipeline is designed to fully 
@@ -59,12 +59,17 @@
 # v3.0:  Updated to CASA 5.1.2, updated tasks, saving more diagnostic plots/logs as well.
 #        Changes include:  Switching to tclean & oldsplit, saving additional calibration table in split module,
 #                          changing flagging.  
+# v3.1: Updated to CASA 5.3.  Flagging routines finalized for calibrator.  
+#        Changed references to field from numbers to names.
+#        Added masks to select RFI-free regions of the spectrum for calibration
+# v3.2: Adding flagging statistics vs. baseline   
+# v3.3: Replace masks with flagging of bad RFI channels, including flagging statistics, make cubes of calibrators
 
-version = "3.0.0"
+version = "3.3"
 svnrevision = '11nnn'
-date = "2018Apr26"
+date = "2018Oct08"
 
-print "Pipeline version "+version+" for use with CASA 5.1.2"
+print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys
 import pylab as pylab
 # include additional packages for hanningsmooth
@@ -78,13 +83,16 @@ import ast   # Included for flagging
 casaver = casa['version'].split('.')
 major,minor,revision=casaver[0],casaver[1],casaver[2].split('-')[0]
 casa_version = 100*int(major)+10*int(minor)+int(revision[0])
-if casa_version != 512:
-    sys.exit("Your CASA version is "+casa_version+", please re-start using CASA 5.1.2")
+if casa_version != 530:
+    sys.exit("Your CASA version is "+casa_version+", please re-start using CASA 5.3.0")
 
-# Define location of pipeline
-#pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
-pipepath='/data/dpisano/CHILES/chiles_pipeline/'
-#pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
+# Define location of pipeline, if not already defined
+try:
+    pipepath
+except:
+    #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
+    pipepath='/data/dpisano/CHILES/chiles_pipeline/'
+    #pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
 
 # Define location of output files from NRAO continuum pipeline
 nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
@@ -102,7 +110,8 @@ log_dir='logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-maincasalog = casalogger.func_globals['thelogfile']
+#maincasalog = casalogger.func_globals['thelogfile']
+maincasalog=casalog.logfile()
 
 def logprint(msg, logfileout=maincasalog):
     print (msg)
@@ -122,7 +131,7 @@ if not os.path.exists(timing_file):
     timelog=open(timing_file,'w')
 else:
     timelog=open(timing_file,'a')
-    
+     
 def runtiming(pipestate, status):
     '''Determine profile for a given state/stage of the pipeline
     '''
@@ -183,8 +192,14 @@ try:
     if (os.path.exists(msname) == False):
         logprint ("Creating measurement set", logfileout='logs/initial.log')
 
-        scanlist=raw_input("If desired, enter list of subset of scans (using CASA nomenclature; leave blank for all scans): ")
+        scan_defined=1
+        try:
+            scanlist
+        except NameError:
+            scan_defined=0
+            scanlist=raw_input("If desired, enter list of subset of scans (using CASA nomenclature; leave blank for all scans): ")
 
+# This task will need to be replaced for future versions of CASA (with importasdm)
         default('importevla')
         asdm=SDM_name
         vis=msname
@@ -216,6 +231,7 @@ try:
 ######################################################################
 
 # HANNING SMOOTH (OPTIONAL, MAY BE IMPORTANT IF THERE IS NARROWBAND RFI)
+# Changed default behavior to do Hanning smoothing (we always do this, unless it has already been done).  
 
     if myHanning.lower() == "y":
         logprint ("Hanning smoothing the data", logfileout='logs/initial.log')
@@ -624,51 +640,60 @@ try:
     else:
         logprint ("No missing scans found.", logfileout='logs/initial.log')
     
+
+#8/7/18 DJP:  We can get nice plots without the Plot window using "prtants" if we run CASA with the --agg flag.  Commenting out PRTAN code.
+    default('plotants')
+    vis=ms_active
+    figfile='antpos.png'
+    logpos=True
+    antindex=True
+    plotants()
+    
 #PRTAN
 #This program mimics the behavior of PRTAN in AIPS by plotting the locations
 #of VLA antennas based on their station location, not their physical position,
 #so that they are reasonably spaced on a plot.
 #3/24/15 DJP
-
-    tb.open(ms_active+"/ANTENNA")
-    antname=tb.getcol("NAME")
-    station=tb.getcol("STATION")
-    x=np.zeros(len(antname))
-    y=np.zeros(len(antname))
-    
-#For N antennas plot at x=0, y=Station #/4
-#For W antennas plot at x=Station #/4*-cos(-45), y=Station #/4*sin(-45)
-#For E antennas plot at x=Station #/4*cos(45), y=Station #/4*sin(-45)
-
-    for i in range(len(antname)):
-        if station[i].find("N") >= 0:
-            y[i]=float(re.findall('\d+',station[i])[0])/4.
-        if station[i].find("E") >= 0:
-            x[i]=float(re.findall('\d+',station[i])[0])/4.*(np.cos(-np.pi/4.))
-            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
-        if station[i].find("W") >= 0:
-            x[i]=float(re.findall('\d+',station[i])[0])/4.*(-np.cos(-np.pi/4.))
-            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
-    pylab.figure()
-    pylab.ioff()
-    pylab.plot(x,y,'w.')
-    for i in range(len(antname)):
-        pylab.text(x[i],y[i],antname[i])
-    
-#Compare list of antennas in array to those not in use, print those not in use at bottom of plot
-    antlist=['ea01','ea02','ea03','ea04','ea05','ea06','ea07','ea08','ea09','ea10','ea11','ea12','ea13','ea14','ea15','ea16','ea17','ea18','ea19','ea20','ea21','ea22','ea23','ea24','ea25','ea26','ea27','ea28']
-
-    badant=list(set(antlist)-set(antname))
-    badname=''
-    for i in range(len(badant)):
-        badname+=badant[i]
-        badname+=' '
-    xb=-0.05*len(badname)
-    yb=min(y)
-    pylab.text(-xb,yb,badname)
-    pylab.tick_params(reset=True,axis='both',which='both',top='off',labeltop='off',bottom='off',labelbottom='off',left='off',labelleft='off',right='off',labelright='off')
-    pylab.savefig('antpos.png')
-#END PRTAN
+#
+#    tb.open(ms_active+"/ANTENNA")
+#    antname=tb.getcol("NAME")
+#    station=tb.getcol("STATION")
+#    x=np.zeros(len(antname))
+#    y=np.zeros(len(antname))
+#    
+##For N antennas plot at x=0, y=Station #/4
+##For W antennas plot at x=Station #/4*-cos(-45), y=Station #/4*sin(-45)
+##For E antennas plot at x=Station #/4*cos(45), y=Station #/4*sin(-45)
+#
+#    for i in range(len(antname)):
+#        if station[i].find("N") >= 0:
+#            y[i]=float(re.findall('\d+',station[i])[0])/4.
+#        if station[i].find("E") >= 0:
+#            x[i]=float(re.findall('\d+',station[i])[0])/4.*(np.cos(-np.pi/4.))
+#            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
+#        if station[i].find("W") >= 0:
+#            x[i]=float(re.findall('\d+',station[i])[0])/4.*(-np.cos(-np.pi/4.))
+#            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
+#    pylab.ioff()
+#    pylab.figure()
+#    pylab.plot(x,y,'w.')
+#    for i in range(len(antname)):
+#        pylab.text(x[i],y[i],antname[i])
+#    
+##Compare list of antennas in array to those not in use, print those not in use at bottom of plot
+#    antlist=['ea01','ea02','ea03','ea04','ea05','ea06','ea07','ea08','ea09','ea10','ea11','ea12','ea13','ea14','ea15','ea16','ea17','ea18','ea19','ea20','ea21','ea22','ea23','ea24','ea25','ea26','ea27','ea28']
+#
+#    badant=list(set(antlist)-set(antname))
+#    badname=''
+#    for i in range(len(badant)):
+#        badname+=badant[i]
+#        badname+=' '
+#    xb=-0.05*len(badname)
+#    yb=min(y)
+#    pylab.text(-xb,yb,badname)
+#    pylab.tick_params(reset=True,axis='both',which='both',top='off',labeltop='off',bottom='off',labelbottom='off',left='off',labelleft='off',right='off',labelright='off')
+#    pylab.savefig('antpos.png')
+##END PRTAN
     if os.path.exists('plots')==False:
         os.system("mkdir plots")
     os.system("mv antpos.png plots/.")
@@ -724,6 +749,7 @@ try:
         
 # Zero flagging done on import in version 0.10 and following, but in case it wasn't.
 # First do zero flagging (reason='CLIP_ZERO_ALL')
+# 8/29/18 DJP:  This will need to be done again when importasdm is used.
     if ms_create_flag==False:
         default('flagdata')
         vis=ms_active
@@ -739,7 +765,8 @@ try:
         logprint ("Zero flags carried out", logfileout='logs/initial.log')
     else:
         logprint ("Zero flagging already applied on import", logfileout='logs/initial.log')
-         
+
+          
 # Now shadow flagging
 # Not needed for B configuration observations
     #default('flagdata')
@@ -813,10 +840,34 @@ try:
     correlation='RR,LL'
     spwchan=True
     spwcorr=True
+    basecnt=True  # Include summary of flagging vs. baseline
     action='calculate'
     s_i=flagdata() # Save results to dictionary
     initial_flag=s_i['flagged']/s_i['total']
     logprint ("Percentage of all data flagged after initial module: "+str(initial_flag*100)+'%', logfileout='logs/initial.log')
+
+# Make plot of flagging percentage vs. uvdistance
+# Get information for flagging percentage vs. uvdistance
+    gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+    base_dict = create_baseline_dict(ms_active, gantdata)
+#match flagging data to dictionary entry
+    datamatch = flag_match_baseline(s_i['baseline'], base_dict)
+#bin the statistics
+    binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+    ### Plot the Data
+    barwidth = binned_stats[0][1]
+    totflagged = 'Initial Flagging (all sources): '+ str(initial_flag*100) + '% Data Flagged'
+    pylab.close()
+    pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+    pylab.title(totflagged)
+    pylab.grid()
+    pylab.ylabel('flagged data [%]')
+    pylab.xlabel('average UV distance [m]')
+    pylab.savefig('initial_flag_uvdist.png')
+    os.system("mv initial_flag_uvdist.png plots/.") 
     
 
 ######################################################################
@@ -849,9 +900,11 @@ try:
         wlog.write('<li><a href="'+weblog_file+'">NRAO continuum pipeline weblog</a></li>\n')
     wlog.write('<li>Antenna positions: \n')
     wlog.write('<br><img src="./plots/antpos.png"></li>\n')
+    wlog.write('<br>\n')
+    wlog.write('<li><br><img src="./plots/initial_flag_uvdist.png"></li>\n')
+    wlog.write('<br>\n')
     wlog.write('<li><a href="logs/initial.log">Initial Module Log</a></li>\n')
     wlog.write('<br>\n')
-    wlog.write('<br> Percentage of data flagged: '+str(initial_flag*100)+'\n')
     wlog.write('<br>')
     wlog.write('<hr>\n')
     wlog.write('</body>\n')

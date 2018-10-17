@@ -6,6 +6,7 @@
 #8/31/15 DJP
 
 # 9/6/17 DJP, backs up old plots/html file before making new ones.
+# 8/29/18 DJP: Changed field='2' to field='1331+305=3C286'.  
 
 #Part I: define some variables that will be used later
 import copy
@@ -52,6 +53,57 @@ AllSpwMapValues.append([])
 #Part V: Data inspection
 logprint ("Create data inspection plots", logfileout='logs/bandpass.log')
 
+# Make plot of flagging statistics
+# s_b is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_b['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'BP Flagging: '+ str(flux_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('bp_flag_uvdist.png')
+os.system("mv bp_flag_uvdist.png plots/.") 
+
+# Make plot of percentage of data flagged as a function of channel (for both correlations combined):
+flag_frac=[]
+ct=-1
+chan=[]
+freq=[]
+flagged=[]
+totals=[]
+# Extract frequency of first channel of spw=0 from listobs output
+nu0=reference_frequencies[0]/1.e6 #get reference frequency in MHz
+dnu=0.015625 # channel width in MHz
+for s in range(15):
+    for c in range(2048):
+        ct+=1
+        chan.append(ct)
+        freq.append(nu0+dnu*ct)
+        flagged.append(s_b['spw:channel'][str(s)+':'+str(c)]['flagged'])
+        totals.append(s_b['spw:channel'][str(s)+':'+str(c)]['total'])
+        flag_frac.append(flagged[ct]/totals[ct])
+
+fig=pylab.figure()
+pylab.plot(freq,flag_frac,'k-')
+pylab.xlim(940.,1445.)
+pylab.xlabel('Frequency [MHz]')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("bp_flag.png")
+pylab.close(fig)
 
 #16: plot delays
 nplots=int(numAntenna/3)
@@ -94,36 +146,31 @@ seq=range(0,15)
 for ii in seq:
     default('plotms')
     vis='finalBPcal.b'
-    field='2'        # Only for 3C286
+    field='1331+305=3C286'        # Only for 3C286
     xaxis='freq'
     yaxis='amp'
     xdatacolumn=''
     ydatacolumn=''
-    averagedata=True
-    avgtime='1e5'
-    avgscan=True
-    avgbaseline=True
-    antenna=refAnt
-    scalar=False
+    averagedata=False
     spw=str(ii)
-    avgspw=False
+    iteraxis='spw'
     showlegend=False
     coloraxis='Antenna1'
     title='Spw'+str(ii)+': Amp v. Freq'
     showgui=False
     clearplots=True
-    plotfile='bpamp_spw'+str(ii)+'.png'
+    plotfile='bpamp.png'
     plotms()
     
     yaxis='phase'
     title='Spw'+str(ii)+': Phase v. Freq'
-    plotfile='bpphase_spw'+str(ii)+'.png'
+    plotfile='bpphase.png'
     plotms()
 
 #Plot UV spectrum (averaged over all baselines & time) of flux calibrator
 default('plotms')
 vis=ms_active   
-field='2'        # Only for 3C286
+field='1331+305=3C286'        # Only for 3C286
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -160,7 +207,7 @@ default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
-field='2'
+field='1331+305=3C286'
 spw='0~14:128~1920'    # Extend the region used for imaging/plots, only excluding the edges.
 width='1793'
 antenna=''
@@ -223,6 +270,7 @@ for ii in seq:
 seq=range(0,15)
 #19: 
 for ii in seq:
+    #19: Imaging flux calibrator
     print 'STARTS IMAGING FLUX CALIBRATOR OF SPW='+str(ii)
     default('tclean')
     image_name='fluxcalibrator_spw'+str(ii)
@@ -346,6 +394,7 @@ pylab.close(fig)
 
 
 #Move plots, images to sub-directory
+
 os.system("mv *.png plots")
 if os.path.exists('images')==False:
     os.system("mkdir images")
@@ -380,8 +429,8 @@ wlog.write('<li> Bandpass solutions (amplitude and phase) for reference antenna:
 wlog.write('<li> Color coded by antenna, both polarizations shown \n')
 wlog.write('<table> \n')
 for ii in seq:
-    wlog.write('<tr><td><img src="plots/bpamp_spw'+str(ii)+'.png"></td>\n')
-    wlog.write('<td><img src="plots/bpphase_spw'+str(ii)+'.png"></td></tr>\n')
+    wlog.write('<tr><td><img src="plots/bpamp_Spw'+str(ii)+'.png"></td>\n')
+    wlog.write('<td><img src="plots/bpphase_Spw'+str(ii)+'.png"></td></tr>\n')
 wlog.write('</table> \n')
 wlog.write('<br>')
 wlog.write('<li> Amp vs. Phase (averaged over all channels in a spw): \n')
@@ -402,6 +451,12 @@ wlog.write('<br><img src="plots/fluxcal_beamsize.png">\n')
 wlog.write('<br><img src="plots/fluxcal_peak.png">\n')
 wlog.write('<br><img src="plots/fluxcal_rms.png"></li>\n')
 wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. frequency:\n')
+wlog.write('<li><br><img src="./plots/bp_flag.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. uvdist\n')
+wlog.write('<li><br><img src="./plots/bp_flag_uvdist.png"></li>\n')
+wlog.write('<br>\n')
 wlog.write('<br> Percentage of 3C286 data flagged: '+str(flux_flag*100)+'\n')
 wlog.write('<br>')
 wlog.write('<hr>\n')
@@ -409,7 +464,7 @@ wlog.write('</body>\n')
 wlog.write('</html>\n')
 wlog.close()
 
-logprint ("Finished CHILES_pipe_bandpass_plots.py", logfileout='logs/bandpass.log')
+logprint ("Finished CHILES_pipe_bandpass.py", logfileout='logs/bandpass.log')
 time_list=runtiming('bandpass', 'end')
 
 pipeline_save()

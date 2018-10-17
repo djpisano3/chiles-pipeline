@@ -18,6 +18,8 @@
 # 12/7/16 DJP:  Changed plots to frequency on x-axis. Including amp v. time plots. Saving flagging statistics to file.
 # 12/9/16 DJP:  Added additional flagging to completely flag any channel that is already more than 90% flagged (code from XF).
 # 4/22/18 DJP: Changing flagging and split to oldsplit
+# 8/29/18 DJP: Changed field='1' to field='deepfield' and other fields to their name instead of number.  
+
 
 
 logprint ("Starting CHILES_pipe_target.py", logfileout='logs/target.log')
@@ -48,14 +50,14 @@ TargetSpwMapValues.append([])
 TargetSpwMapValues.append([])
 
 if os.path.exists('antposcal.p')==True:
-  TargetFields=['','','2','2','0','0','0']
+  TargetFields=['','','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
 
 if os.path.exists('antposcal.p')==False:
-  TargetFields=['','2','2','0','0','0']
+  TargetFields=['','1331+305=3C286','1331+305=3C286','J0943-0819','J0943-0819','J0943-0819']
 
 default('applycal')
 vis=ms_active
-field='1'            # Apply calibration to target
+field='deepfield'            # Apply calibration to target
 spw=''
 intent=''
 selectdata=True
@@ -79,7 +81,7 @@ logprint("Flagging deepfield",logfileout='logs/target.log')
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='1'
+field='deepfield'
 spw='14'
 mode='clip'
 clipminmax=[0,30]
@@ -91,7 +93,7 @@ flagdata()
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='1'
+field='deepfield'
 spw='14'
 scan=''
 mode='rflag'
@@ -146,7 +148,7 @@ flagdata()
 default('flagdata')
 vis=ms_active
 datacolumn='corrected'
-field='1'
+field='deepfield'
 spw='14'
 scan=''
 mode='rflag'
@@ -310,10 +312,11 @@ default('flagdata')
 vis=ms_active
 mode='summary'
 spw='0~14'
-field='1'           # Only flagged deepfield, no need to check others here.
+field='deepfield'           # Only flagged deepfield, no need to check others here.
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
+basecnt = True
 action='calculate'
 s_t=flagdata()
 
@@ -330,7 +333,7 @@ for a in s_t['spw:channel']:
         flagChannels.append(a)
 strChan = ','.join(flagChannels)
 
-flagdata(vis=ms_active,field='1',mode="manual",spw=strChan, autocorr=False)
+flagdata(vis=ms_active,field='deepfield',mode="manual",spw=strChan, autocorr=False)
 
 
 # Save final version of flags
@@ -349,6 +352,32 @@ logprint ("Flag column saved to "+versionname, logfileout='logs/target.log')
 # Step 3: Diagnostic Plots
 logprint("Making diagnostic plots",logfileout='logs/target.log')
 
+# Make plot of flagging statistics
+# s_t is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_t['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'Target Flagging: '+ str(target_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('target_flag_uvdist.png')
+pylab.close()
+os.system("mv target_flag_uvdist.png plots/.") 
+
 # Make plot of percentage of data flagged as a function of channel (for both correlations combined):
 flag_frac=[]
 ct=-1
@@ -356,6 +385,7 @@ chan=[]
 freq=[]
 flagged=[]
 totals=[]
+
 # Extract frequency of first channel of spw=0 from listobs output
 nu0=reference_frequencies[0]/1.e6 #get reference frequency in MHz
 dnu=0.015625 # channel width in MHz
@@ -381,7 +411,7 @@ pylab.close(fig)
 #Plot UV spectrum (averaged over all baselines & time) of target
 default('plotms')
 vis=ms_active   
-field='1'        # Only for deepfield
+field='deepfield'        # Only for deepfield
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -410,7 +440,7 @@ seq=range(0,15)
 for ii in seq:
     default('plotms')
     vis=ms_active  # Use standard MS
-    field='1'       # Only for deepfield
+    field='deepfield'       # Only for deepfield
     xaxis='frequency'
     yaxis='amp'
     xdatacolumn='corrected'
@@ -626,6 +656,8 @@ wlog.write('<br> Percentage of deepfield data flagged: '+str(target_flag*100)+'\
 wlog.write('<br> Flagging percentage vs. frequency (before removing channels that are more than 90% flagged)\n')
 wlog.write('<br><img src="plots/target_flag.png">\n')
 wlog.write('<br>')
+wlog.write('<br> Flagging percentage vs. uvdistance\n')
+wlog.write('<br><img src="plots/target_flag_uvdist.png">\n')
 wlog.write('<hr>\n')
 wlog.write('</body>\n')
 wlog.write('</html>\n')

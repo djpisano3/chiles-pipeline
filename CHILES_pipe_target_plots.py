@@ -3,18 +3,9 @@
 # to the target field.  This task runs RFLAG and extend on the target field and
 # makes some diagnostic plots.  
 # 9/9/15 DJP
-# Removed clipping due to overflagging 12/7/15 DJP
-# Set extendpols=False in RFLAG 1/27/16 DJP
-# Included flag summary for target, and applycal for target moved here, 2/9/16 DJP
-# Removed averaging from plots, 2/11/16 DJP
-# 2/15/16 DJP: Changed ff value to a float and re-implemented "extend".
-# 2/18/16 DJP: Plot UV spectrum of field (averaging over time, baseline)
-# 2/18/16 DJP: Make diagnostic plots using averaged data.
-# 2/19/16 DJP: Make 2 UVSPEC plots (one with full range, one with zoom).  Changed averaging.  
-# 6/28/16 DJP: Including time/frequency averaging on the target after initial rflag and extend.
-# 7/1/16 DJP:  Including time-averaged RFLAG and using parameters determined by XF.  Setting rflag scale=3, growtime=60.  
-# 9/21/16 DJP:  Fixed variable names for time-averaged RFLAG.  
-# 9/29/17 DJP:  Fixed bugs and improved cleaning up of existing files.
+# 4/22/18 DJP: Changing flagging and split to oldsplit
+# 8/29/18 DJP:  Updated references from field='1' to field='deepfield'
+
 
 
 logprint ("Starting CHILES_pipe_target_plots.py", logfileout='logs/target.log')
@@ -71,7 +62,7 @@ pylab.close(fig)
 #Plot UV spectrum (averaged over all baselines & time) of target
 default('plotms')
 vis=ms_active   
-field='1'        # Only for deepfield
+field='deepfield'        # Only for deepfield
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -100,7 +91,7 @@ seq=range(0,15)
 for ii in seq:
     default('plotms')
     vis=ms_active  # Use standard MS
-    field='1'       # Only for deepfield
+    field='deepfield'       # Only for deepfield
     xaxis='frequency'
     yaxis='amp'
     xdatacolumn='corrected'

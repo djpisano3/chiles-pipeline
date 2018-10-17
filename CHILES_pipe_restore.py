@@ -40,7 +40,8 @@ log_dir='logs'
 if not os.path.exists(log_dir):
     os.makedirs(log_dir)
 
-maincasalog = casalogger.func_globals['thelogfile']
+#maincasalog = casalogger.func_globals['thelogfile']
+maincasalog=casalog.logfile()
 
 def logprint(msg, logfileout=maincasalog):
     print (msg)
@@ -104,7 +105,7 @@ def pipeline_restore(shelf_filename='pipeline_shelf.restore'):
 try:
 
     pipeline_restore()
-    maincasalog = casalogger.func_globals['thelogfile']
+    maincasalog=casalog.logfile()
     execfile(pipepath+'CHILES_pipe_startup.py')
     
 

@@ -227,3 +227,6 @@ priorspwmap
 nu0
 dnu
 sigma
+gantdata
+base_dict
+flag_spw

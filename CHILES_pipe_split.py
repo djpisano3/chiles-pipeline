@@ -28,10 +28,11 @@ default('flagdata')
 vis=ms_active
 mode='summary'
 spw='0~14'
-field='1'           # Only flagged deepfield, no need to check others here.
+field='deepfield'           # Only flagged deepfield, no need to check others here.
 correlation='RR,LL'
 spwchan=True
 spwcorr=True
+basecnt = True
 action='calculate'
 s_t=flagdata()
 
@@ -54,6 +55,32 @@ logprint ("Flag column saved to "+versionname, logfileout='logs/split.log')
 
 # Step 3: Diagnostic Plots
 logprint("Making diagnostic plots",logfileout='logs/split.log')
+
+# Make plot of flagging statistics
+# s_t is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_t['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'Target Flagging: '+ str(target_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('finaltarget_flag_uvdist.png')
+pylab.close()
+os.system("mv finaltarget_flag_uvdist.png plots/.") 
 
 # Make plot of percentage of data flagged as a function of channel (for both correlations combined):
 flag_frac=[]
@@ -115,23 +142,23 @@ oldsplit()
 os.system("mv "+targetfile+" FINAL/")
 
 # Split with averaging by 2x in time & 4x in frequency
-outputms=ms_active[:-3]+'_calibrated_deepfield_smooth.ms'
-targetfile=outputms
+#outputms=ms_active[:-3]+'_calibrated_deepfield_smooth.ms'
+#targetfile=outputms
 
 # Delete final MS if already present
-if os.path.exists(targetfile):
-    os.system("rm -rf "+targetfile)
-    os.system("rm -rf FINAL/"+targetfile)
-
-default('oldsplit')
-vis=ms_active
-datacolumn='corrected'
-outputvis=targetfile
-field='deepfield'
-spw ='0~14'
-width=4
-timebin='16s'
-oldsplit()
+#if os.path.exists(targetfile):
+#    os.system("rm -rf "+targetfile)
+#    os.system("rm -rf FINAL/"+targetfile)
+#
+#default('oldsplit')
+#vis=ms_active
+#datacolumn='corrected'
+#outputvis=targetfile
+#field='deepfield'
+#spw ='0~14'
+#width=4
+#timebin='16s'
+#oldsplit()
 
 os.system("mv "+targetfile+" FINAL/")
 
@@ -177,6 +204,8 @@ wlog.write('<li> Session: '+SDM_name+'</li>\n')
 wlog.write('<li><a href="logs/split.log">Split Log</a></li>\n')
 wlog.write('<li> Percentage of data flagged as a function of frequency: \n')
 wlog.write('<br><img src="plots/finaltarget_flag.png">\n')
+wlog.write('<li> Percentage of data flagged as a function of uvdistance: \n')
+wlog.write('<br><img src="plots/finaltarget_flag_uvdist.png">\n')
 wlog.write('<br>')
 wlog.write('<li><a href="logs/timing.log">Timing Log</a></li>\n')
 wlog.write('<hr>\n')

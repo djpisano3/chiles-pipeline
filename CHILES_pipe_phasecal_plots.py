@@ -2,6 +2,7 @@
 # This module of the CHILES pipeline re-applies phase calibration and makes
 # the diagnostic plots again.    
 # 9/23/16 DJP
+# 8/29/18 DJP: Changing field numbers to field names.
 
 
 logprint ("Starting CHILES_pipe_phasecal_plots.py", logfileout='logs/phasecal.log')
@@ -30,10 +31,64 @@ os.system("rm -rf images/phasecalibrator_spw*.*")
 
 logprint ("Making diagnostic plots", logfileout='logs/phasecal.log')
 
+# Make plot of flagging statistics
+# s_p is the output of flagdata run (above)
+# Get information for flagging percentage vs. uvdistance
+#gantdata = get_antenna_data(ms_active)
+#create adictionary with flagging info
+#base_dict = create_baseline_dict(ms_active, gantdata)
+#gantdata and base_dict are already in the initial module so no need to retrieve that information again.
+#match flagging data to dictionary entry
+datamatch = flag_match_baseline(s_p['baseline'], base_dict)
+#bin the statistics
+binned_stats = bin_statistics(datamatch, 'B', 25)  # 25 is the number of uvdist bins such that there is minimal error in uvdist.
+
+#Plot flagging % vs. uvdist
+### Plot the Data
+barwidth = binned_stats[0][1]
+totflagged = 'Phase Cal Flagging: '+ str(phase_flag*100) + '% Data Flagged'
+pylab.close()
+pylab.bar(binned_stats[0],binned_stats[1], width=barwidth, color='grey', align='edge')
+pylab.title(totflagged)
+pylab.grid()
+pylab.ylabel('flagged data [%]')
+pylab.xlabel('average UV distance [m]')
+pylab.savefig('phase_flag_uvdist.png')
+pylab.close()
+
+os.system("mv phase_flag_uvdist.png plots/.") 
+
+# Make plot of percentage of data flagged as a function of channel (for both correlations combined):
+flag_frac=[]
+ct=-1
+chan=[]
+freq=[]
+flagged=[]
+totals=[]
+# Extract frequency of first channel of spw=0 from listobs output
+nu0=reference_frequencies[0]/1.e6 #get reference frequency in MHz
+dnu=0.015625 # channel width in MHz
+for s in range(15):
+    for c in range(2048):
+        ct+=1
+        chan.append(ct)
+        freq.append(nu0+dnu*ct)
+        flagged.append(s_p['spw:channel'][str(s)+':'+str(c)]['flagged'])
+        totals.append(s_p['spw:channel'][str(s)+':'+str(c)]['total'])
+        flag_frac.append(flagged[ct]/totals[ct])
+
+fig=pylab.figure()
+pylab.plot(freq,flag_frac,'k-')
+pylab.xlim(940.,1445.)
+pylab.xlabel('Frequency [MHz]')
+pylab.ylabel('Fraction of data flagged')
+pylab.savefig("phase_flag.png")
+pylab.close(fig)
+
 #Plot UV spectrum (averaged over all baselines & time) of phase calibrator
 default('plotms')
 vis=ms_active   
-field='0'        # Only for J0943
+field='J0943-0819'        # Only for J0943
 xaxis='freq'
 yaxis='amp'
 xdatacolumn='corrected'
@@ -70,7 +125,7 @@ default('oldsplit')
 vis=ms_active
 outputvis=output_ms
 datacolumn='corrected'
-field='0'
+field='J0943-0819'
 spw='0~14:128~1920'  # Average over all channels, except the very edges
 width='1793'
 antenna=''
@@ -282,6 +337,8 @@ plotcal()
 #Move plots, images to sub-directory
 
 os.system("mv *.png plots")
+if os.path.exists('images')==False:
+    os.system("mkdir images")
 os.system("mv phasecalibrator_spw*.* images")
 
 #Create webpage with results
@@ -323,6 +380,12 @@ wlog.write('<br><img src="plots/phasecal_beamsize.png">\n')
 wlog.write('<br><img src="plots/phasecal_peak.png">\n')
 wlog.write('<br><img src="plots/phasecal_rms.png"></li>\n')
 wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. frequency:\n')
+wlog.write('<li><br><img src="./plots/phase_flag.png"></li>\n')
+wlog.write('<br>\n')
+wlog.write('<br> Flagging percentage vs. uvdist\n')
+wlog.write('<li><br><img src="./plots/phase_flag_uvdist.png"></li>\n')
+wlog.write('<br>\n')
 wlog.write('<br> Percentage of J0943 data flagged: '+str(phase_flag*100)+'\n')
 wlog.write('<br>')
 wlog.write('<hr>\n')
@@ -331,7 +394,7 @@ wlog.write('</html>\n')
 wlog.close()
 
 
-logprint ("Finished CHILES_pipe_phasecal_plots.py", logfileout='logs/phasecal.log')
+logprint ("Finished CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
 time_list=runtiming('phase', 'end')
 
 pipeline_save()
