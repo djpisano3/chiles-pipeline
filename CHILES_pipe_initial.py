@@ -64,10 +64,11 @@
 #        Added masks to select RFI-free regions of the spectrum for calibration
 # v3.2: Adding flagging statistics vs. baseline   
 # v3.3: Replace masks with flagging of bad RFI channels, including flagging statistics, make cubes of calibrators
+# v3.3.1:  Fixed BP masks (all channels included) and fixed bugs in testcubes, split modules
 
-version = "3.3"
+version = "3.3.1"
 svnrevision = '11nnn'
-date = "2018Oct08"
+date = "2018Oct22"
 
 print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys

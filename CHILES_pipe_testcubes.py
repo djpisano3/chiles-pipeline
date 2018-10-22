@@ -102,6 +102,7 @@ for ii in seq:
 
         default('tclean')
     
+        fluxfile=fluxms+'_spw'+str(ii)+'.ms'
         image_name='fluxcube_spw'+str(ii)
         fieldid='1331+305=3C286'
         grid_mode=''
@@ -149,11 +150,12 @@ for ii in seq:
 
         default('tclean')
     
+        phasefile=phasems+'_spw'+str(ii)+'.ms'
         image_name='phasecube_spw'+str(ii)
         fieldid='J0943-0819'
         iteration=10000   # Total number of iterations for the entire cube (per spw), ~4 per channel 
 
-        vis=fluxfile
+        vis=phasefile
         imagename=image_name
         selectdata=False
         field=fieldid
@@ -193,6 +195,7 @@ for ii in seq:
 
         default('tclean')
     
+        targetfile=targetms+'_spw'+str(ii)+'.ms'
         image_name='targetcube_10mJy_spw'+str(ii)
         fieldid='deepfield'
         phasecenter='J2000 10h01m31.4 +02d26m40'

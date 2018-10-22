@@ -379,8 +379,8 @@ vis=ms_active
 caltable='initialBPcal.b'
 field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #spw='0~14:64~1982'
-#spw='0~14'           # Solve BP for all channels in spectral line spws.
-spw=tst_bpass_spw     # Only solve in clean windows. 
+spw='0~14'           # Solve BP for all channels in spectral line spws.
+#spw=tst_bpass_spw     # Only solve in clean windows. 
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'
@@ -680,8 +680,8 @@ vis=ms_active
 caltable='finalBPcal.b'
 field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
 #spw='0~14:64~1982'
-#spw='0~14'           # Solve BP for all channels in spectral line spws.
-spw=tst_bpass_spw
+spw='0~14'           # Solve BP for all channels in spectral line spws.
+#spw=tst_bpass_spw
 selectdata=True
 uvrange=uvr_cal      # Set uvrange to exclude worst of RFI
 solint='inf'

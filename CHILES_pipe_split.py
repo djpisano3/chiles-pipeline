@@ -160,7 +160,7 @@ os.system("mv "+targetfile+" FINAL/")
 #timebin='16s'
 #oldsplit()
 
-os.system("mv "+targetfile+" FINAL/")
+#os.system("mv "+targetfile+" FINAL/")
 
 # Save calibration tables
 if os.path.exists('antposcal.p')==True:
