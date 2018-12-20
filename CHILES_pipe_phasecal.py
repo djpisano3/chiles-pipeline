@@ -24,6 +24,7 @@
 # 4/22/18 DJP: Changing flagging and split to oldsplit
 # 8/29/18 DJP: Changing field numbers to field names.
 # 10/8/18 DJP: Including flagging percentage vs. uvdist, use flags instead of masks.
+# 12/19/18 DJP: Moved flagging mask regions to initial module
 
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
@@ -89,15 +90,6 @@ if os.path.exists('antposcal.p')==False:
 
 # Set channel/spw range to use for calibrations (based on BP code)
 tst_gain_spw=tst_bpass_spw
-
-# Flagging regions that are generally affected by RFI, using flag_spw from bandpass module
-default('flagdata')
-vis=ms_active
-field='J0943-0819'
-spw=flag_spw
-mode='manual'
-action='apply'
-flagdata()
 
 
 # This module is hard-coded for CHILES, so:
@@ -470,6 +462,7 @@ freqdev='fdev14_f0.txt'
 freqdevscale=1.0
 timedevscale=1.0
 extendflags=False
+flagbackup=False
 action='calculate'
 flagdata()
 
@@ -512,55 +505,6 @@ flagbackup=False
 savepars=True
 flagdata()
 
-
-# Old flagging routines
-#logprint ("Initial RFLAG", logfileout='logs/phasecal.log')
-#
-#ff= float(0)   # This sets the field being flagged; here it is the phase cal, field 0.
-#
-#default('flagdata')
-#vis=ms_active
-#mode='rflag'
-#field='J0943-0819'            # Hard-coded to field 0 as this is always phase cal
-#spw='0~14'
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendflags=False    # Explicitly set to False as default is True.  Extend is explicitly done later.  
-#extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
-#winsize=3
-## The following noise levels are taken from tests by XF.
-#freqdev=[[ff,0.0,6.1],[ff,1.0,4.7],[ff,2.0,3.9],[ff,3.0,3.5],[ff,4.0,3.4],[ff,5.0,3.2],[ff,6.0,3.1],[ff,7.0,3.2],[ff,8.0,2.9],[ff,9.0,2.6],[ff,10.0,2.6],[ff,11.0,2.6],[ff,12.0,2.5],[ff,13.0,2.6],[ff,14.0,2.6]]
-#timedev=[[ff,0.0,8.0],[ff,1.0,6.2],[ff,2.0,5.1],[ff,3.0,4.6],[ff,4.0,4.4],[ff,5.0,4.2],[ff,6.0,4.1],[ff,7.0,4.2],[ff,8.0,3.7],[ff,9.0,3.4],[ff,10.0,3.3],[ff,11.0,3.4],[ff,12.0,3.3],[ff,13.0,3.4],[ff,14.0,3.4]]
-#timedevscale=1.0
-#freqdevscale=1.0
-#action='apply'
-#display=''
-#flagbackup=False
-#savepars=True
-#flagdata()
-#
-## Extend flags
-#default('flagdata')
-#vis=ms_active
-#mode='extend'
-#field='J0943-0819'            # Hard-coded to field 0 as this is always phase cal
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendpols=False      
-#growtime=70       
-#growfreq=80       
-#growaround=True      
-#flagneartime=True       
-#flagnearfreq=True       
-#action='apply'
-#display=''
-#flagbackup=True
-#savepars=True
-#flagdata()
 
 # Summary of flagging, after RFLAG+extend (for testing purposes only)
 logprint ("Summary of flags after Flagging", logfileout='logs/phasecal.log')

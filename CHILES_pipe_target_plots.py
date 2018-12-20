@@ -1,4 +1,4 @@
-# CHILES_pipe_target.py
+# CHILES_pipe_target_plots.py
 # This task runs after the "phasecal" task so all calibrations have been applied
 # to the target field.  This task runs RFLAG and extend on the target field and
 # makes some diagnostic plots.  

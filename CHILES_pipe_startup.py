@@ -68,6 +68,8 @@ import shutil
 import shelve
 import copy
 import string
+import ast   # Included for flagging
+
 
 def interrupt(message=''):
     """Exit if interrupted

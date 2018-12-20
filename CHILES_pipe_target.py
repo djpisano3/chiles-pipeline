@@ -19,6 +19,7 @@
 # 12/9/16 DJP:  Added additional flagging to completely flag any channel that is already more than 90% flagged (code from XF).
 # 4/22/18 DJP: Changing flagging and split to oldsplit
 # 8/29/18 DJP: Changed field='1' to field='deepfield' and other fields to their name instead of number.  
+# 12/19/18 DJP: Set flagbackup=False when doing 90% flags.
 
 
 
@@ -103,6 +104,7 @@ freqdevscale=1.0
 timedevscale=1.0
 extendflags=False
 action='calculate'
+flagbackup=False
 flagdata()
 
 
@@ -160,6 +162,7 @@ timeavg=True
 timebin='1000s'
 extendflags=False
 action='calculate'
+flagbackup=False
 flagdata()
 
 
@@ -201,105 +204,6 @@ savepars=True
 flagdata()
 
 
-# Old flagging routinges
-## Using parameters determined by XF.  Set sigma clip level at 3.0x the noise level
-#
-#ff=float(1)
-#freqnoavg=0.4
-#timenoavg=0.5
-#scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
-#scaling=np.asarray(scaling1)
-#sigmacut=4.0
-#freqd1noavg=scaling*freqnoavg*sigmacut
-#timed1noavg=scaling*timenoavg*sigmacut
-#
-#default('flagdata')
-#vis=ms_active
-#mode='rflag'
-#field='deepfield'
-#spw='0~14'
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendflags=False       
-#extendpols=False      
-#winsize=3
-#freqdev=[[ff,0.0,freqd1noavg[0]],[ff,1.0,freqd1noavg[1]],[ff,2.0,freqd1noavg[2]],[ff,3.0,freqd1noavg[3]],[ff,4.0,freqd1noavg[4]],[ff,5.0,freqd1noavg[5]],[ff,6.0,freqd1noavg[6]],[ff,7.0,freqd1noavg[7]],[ff,8.0,freqd1noavg[8]],[ff,9.0,freqd1noavg[9]],[ff,10.0,freqd1noavg[10]],[ff,11.0,freqd1noavg[11]],[ff,12.0,freqd1noavg[12]],[ff,13.0,freqd1noavg[13]],[ff,14.0,freqd1noavg[14]]]
-#timedev=[[ff,0.0,timed1noavg[0]],[ff,1.0,timed1noavg[1]],[ff,2.0,timed1noavg[2]],[ff,3.0,timed1noavg[3]],[ff,4.0,timed1noavg[4]],[ff,5.0,timed1noavg[5]],[ff,6.0,timed1noavg[6]],[ff,7.0,timed1noavg[7]],[ff,8.0,timed1noavg[8]],[ff,9.0,timed1noavg[9]],[ff,10.0,timed1noavg[10]],[ff,11.0,timed1noavg[11]],[ff,12.0,timed1noavg[12]],[ff,13.0,timed1noavg[13]],[ff,14.0,timed1noavg[14]]]
-#timedevscale=1.0
-#freqdevscale=1.0
-#action='apply'
-#display=''
-#flagbackup=False
-#savepars=True
-#flagdata()
-#
-#clearstat()
-#
-#logprint ("Extending flags on target", logfileout='logs/target.log')
-#
-#
-#default('flagdata')
-#vis=ms_active
-#mode='extend'
-#field='deepfield'
-#datacolumn='corrected'
-#correlation=''
-#combinescans=False
-#extendpols=False      
-#growtime=60       
-#growfreq=90       
-#growaround=True       
-#flagneartime=True      
-#flagnearfreq=True       
-#action='apply'
-#display=''
-#flagbackup=False    
-#savepars=False
-#flagdata()
-#
-#clearstat()
-#
-## time-averaged rflag for target
-#
-#logprint ("Time-averaged flagging on target", logfileout='logs/target.log')
-#
-## Using parameters determined by XF.  Set sigma clip level at 10x the noise level
-#
-#freqavgval=0.08
-#timeavgval=9.2e-6
-#
-#
-#scaling1=[2.3,1.8,1.5,1.3,1.3,1.2,1.2,1.2,1.1,1.0,1.0,1.0,1.0,1.0,1.0]
-#scaling=np.asarray(scaling1)
-#sigmacut=10.0  # Changed from 3-sigma to 10-sigma.  
-#freqd1avg=scaling*freqavgval*sigmacut
-#timed1avg=scaling*timeavgval*sigmacut
-#
-#default('flagdata')
-#vis=ms_active
-#mode='rflag'
-#field='deepfield'
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendpols=False      
-#extendflags=False        
-#freqdev=[[ff,0.0,freqd1avg[0]],[ff,1.0,freqd1avg[1]],[ff,2.0,freqd1avg[2]],[ff,3.0,freqd1avg[3]],[ff,4.0,freqd1avg[4]],[ff,5.0,freqd1avg[5]],[ff,6.0,freqd1avg[6]],[ff,7.0,freqd1avg[7]],[ff,8.0,freqd1avg[8]],[ff,9.0,freqd1avg[9]],[ff,10.0,freqd1avg[10]],[ff,11.0,freqd1avg[11]],[ff,12.0,freqd1avg[12]],[ff,13.0,freqd1avg[13]],[ff,14.0,freqd1avg[14]]]
-#timedev=[[ff,0.0,timed1avg[0]],[ff,1.0,timed1avg[1]],[ff,2.0,timed1avg[2]],[ff,3.0,timed1avg[3]],[ff,4.0,timed1avg[4]],[ff,5.0,timed1avg[5]],[ff,6.0,timed1avg[6]],[ff,7.0,timed1avg[7]],[ff,8.0,timed1avg[8]],[ff,9.0,timed1avg[9]],[ff,10.0,timed1avg[10]],[ff,11.0,timed1avg[11]],[ff,12.0,timed1avg[12]],[ff,13.0,timed1avg[13]],[ff,14.0,timed1avg[14]]]
-#timedevscale=1.0
-#freqdevscale=1.0
-#channelavg=False
-#chanbin=1
-#timeavg=True
-#timebin='1000s'
-#action='apply'
-#flagbackup=False
-#savepars=True
-#flagdata()
-
 clearstat()
 
 #EM: back to normal logger output
@@ -333,7 +237,7 @@ for a in s_t['spw:channel']:
         flagChannels.append(a)
 strChan = ','.join(flagChannels)
 
-flagdata(vis=ms_active,field='deepfield',mode="manual",spw=strChan, autocorr=False)
+flagdata(vis=ms_active,field='deepfield',mode="manual",spw=strChan, flagbackup=False, autocorr=False)
 
 
 # Save final version of flags

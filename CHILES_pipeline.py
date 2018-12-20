@@ -13,11 +13,14 @@ import os
 import glob
 
 # Set pipeline path
-pipepath='/data/dpisano/CHILES/chiles_pipeline/'
-#pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
+#pipepath='/data/dpisano/CHILES/chiles_pipeline/'
+#pipepath='/users/djpisano/chiles_pipeline/'
+pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
 
 # Set parent data directory (so data can be found)
-datapath='/data/dpisano/CHILES/DATA/'
+#datapath='/data/dpisano/CHILES/DATA/'
+#datapath='/scratch/djpisano/'
+datapath='/lustre/aoc/projects/chiles/phase2/'
 if os.getcwd() != datapath:
     os.chdir(datapath)
 

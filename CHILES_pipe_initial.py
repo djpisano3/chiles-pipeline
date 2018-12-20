@@ -65,10 +65,11 @@
 # v3.2: Adding flagging statistics vs. baseline   
 # v3.3: Replace masks with flagging of bad RFI channels, including flagging statistics, make cubes of calibrators
 # v3.3.1:  Fixed BP masks (all channels included) and fixed bugs in testcubes, split modules
+# v3.4:  Updated plots, order of flagging, increased quacking, etc.  
 
-version = "3.3.1"
+version = "3.4"
 svnrevision = '11nnn'
-date = "2018Oct22"
+date = "2018Dec19"
 
 print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys
@@ -92,12 +93,13 @@ try:
     pipepath
 except:
     #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
-    pipepath='/data/dpisano/CHILES/chiles_pipeline/'
-    #pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
+    #pipepath='/data/dpisano/CHILES/chiles_pipeline/'
+    #pipepath='/users/djpisano/chiles_pipeline/'
+    pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
 
 # Define location of output files from NRAO continuum pipeline
-nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
-#nrao_weblog_path='/lustre/aoc/projects/chiles/weblogs/'
+#nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
+nrao_weblog_path='/lustre/aoc/projects/chiles/weblogs/'
 
 # To find the path to the weblog index.html file for the NRAO pipeline run:
 def find(name,path):
@@ -786,10 +788,10 @@ try:
     cmdreason_list=[]
 
 
-# Quack the data
+# Quack the data, update to 2.5*int_time
     logprint ("Quack the data", logfileout='logs/initial.log')
     flagdata_list.append("mode='quack' scan=" + quack_scan_string +
-        " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
+        " quackinterval=" + str(2.5*int_time) + " quackmode='beg' " +
         "quackincrement=False")
     
 #Write out list for use in flagdata mode 'list'
@@ -827,7 +829,7 @@ try:
     vis=ms_active
     mode='save'
     versionname='initialflags'
-    comment='Deterministic flags saved after application'
+    comment='Deterministic flags saved after application, before masking'
     merge='replace'
     flagmanager()
     logprint ("Flag column saved to "+versionname, logfileout='logs/initial.log')
@@ -870,6 +872,139 @@ try:
     pylab.savefig('initial_flag_uvdist.png')
     os.system("mv initial_flag_uvdist.png plots/.") 
     
+#Flag regions that are badly affected by RFI on calibrators only.
+    flag_spw=('*:952.6~952.9MHz,'
+    '*:977.64~977.72MHz,'
+    '*:985.0~989.5MHz,'
+    '*:991.5~996.0MHz,'
+    '*:1029.35~1030.65MHz,'
+    '*:1040.8~1041.3MHz,'
+    '*:1042.7~1043.1MHz,'
+    '*:1044.7~1045.2MHz,'
+    '*:1045.8~1046.3MHz,'
+    '*:1046.8~1047.2MHz,'
+    '*:1048.75~1049.3MHz,'
+    '*:1051.8~1052.25MHz,'
+    '*:1052.85~1053.15MHz,'
+    '*:1053.9~1054.15MHz,'
+    '*:1055.9~1056.2MHz,'
+    '*:1056.85~1057.2MHz,'
+    '*:1059.7~1060.5MHz,'
+    '*:1060.85~1061.2MHz,'
+    '*:1061.85~1062.2MHz,'
+    '*:1063.8~1064.5MHz,'
+    '*:1064.8~1065.2MHz,'
+    '*:1066.8~1067.2MHz,'
+    '*:1067.8~1068.2MHz,'
+    '*:1068.8~1069.2MHz,'
+    '*:1069.8~1070.2MHz,'
+    '*:1070.8~1071.2MHz,'
+    '*:1071.8~1072.2MHz,'
+    '*:1072.8~1073.2MHz,'
+    '*:1075.8~1076.2MHz,'
+    '*:1076.8~1077.2MHz,'
+    '*:1077.8~1078.2MHz,'
+    '*:1079.8~1080.2MHz,'
+    '*:1080.8~1081.2MHz,'
+    '*:1081.8~1082.2MHz,'
+    '*:1082.8~1083.2MHz,'
+    '*:1083.8~1084.2MHz,'
+    '*:1084.8~1085MHz,'
+    '*:1085.8~1086.2MHz,'
+    '*:1087.96~1088.04MHz,'
+    '*:1088.6~1091.6MHz,'
+    '*:1091.96~1092.04MHz,'
+    '*:1093.8~1094.2MHz,'
+    '*:1094.8~1095.2MHz,'
+    '*:1096.8~1097.2MHz,'
+    '*:1097.8~1098.2MHz,'
+    '*:1101.9~1102.1 MHz,'
+    '*:1102.8~1103.2MHz,'
+    '*:1103.8~1104.2MHz,'
+    '*:1104.7~1105.2MHz,'
+    '*:1105.8~1106.2MHz,'
+    '*:1106.8~1107.2MHz,'
+    '*:1108.8~1109.2MHz,'
+    '*:1109.8~1110.2MHz,'
+    '*:1110.8~1111.2MHz,'
+    '*:1111.8~1112.2MHz,'
+    '*:1115.8~1116.2MHz,'
+    '*:1116.8~1117.2MHz,'
+    '*:1117.8~1118.2MHz,'
+    '*:1118.8~1119.2MHz,'
+    '*:1119.8~1120.2MHz,'
+    '*:1120.8~1121.2MHz,'
+    '*:1121.8~1122.2MHz,'
+    '*:1122.8~1123.2MHz,'
+    '*:1123.8~1124.2MHz,'
+    '*:1124.8~1125.2MHz,'
+    '*:1125.8~1126.2MHz,'
+    '*:1126.8~1127.2MHz,'
+    '*:1129.8~1130.2MHz,'
+    '*:1130.8~1131.2MHz,'
+    '*:1131.8~1132.2MHz,'
+    '*:1133.8~1134.2MHz,'
+    '*:1134.8~1135.2MHz,'
+    '*:1136.8~1137.2MHz,'
+    '*:1137.8~1138.2MHz,'
+    '*:1138.8~1139.2MHz,'
+    '*:1139.8~1140.2MHz,'
+    '*:1143.8~1144.2MHz,'
+    '*:1146.8~1147.2MHz,'
+    '*:1148.8~1149.2MHz,'
+    '*:1149.8~1150.2MHz,'
+    '*:1153.04~1153.08MHz,'
+    '*:1160.9~1161.1MHz,'
+    '*:1165.9~1166.3MHz,'
+    '*:1167~1186MHz,'
+    '*:1186.65~1186.75MHz,'
+    '*:1201.8~1202.2MHz,'
+    '*:1224~1230MHz,'
+    '*:1242~1250MHz,'
+    '*:1253.6~1255.2MHz,'
+    '*:1293.3~1295.7MHz,'
+    '*:1320~1322MHz,'
+    '*:1326.5~1328.5MHz,'
+    '*:1331~1334MHz,'
+    '*:1336.5~1338MHz,'
+    '*:1379~1383MHz')
+    
+    default('flagdata')
+    vis=ms_active
+    field='J0943-0819,1331+305=3C286'
+    spw=flag_spw
+    mode='manual'
+    action='apply'
+    flagbackup=False
+    flagdata()
+    
+    
+# Make plots showing effect of masking RFI on phase calibrator
+    seq=range(0,15)
+    for ii in seq:
+        print('Plot Amplitude vs. Frequency for Spw '+str(ii))
+        default('plotms')
+        vis=ms_active
+        field='J0943-0819'        # Only for phase calibrator
+        xaxis='freq'
+        yaxis='amp'
+        ydatacolumn='data'
+        averagedata=True
+        averagetime='16'
+        spw=str(ii)
+        uvrange='1500~1600m'
+        iteraxis='spw'
+        showlegend=False
+        title='Flagged Phase Calibrator Data for Spw'+str(ii)+': 1500-1600m'
+        showgui=False
+        clearplots=True
+        customsymbol=True
+        customflaggedsymbol=True
+        flaggedsymbolshape='autoscaling'
+        plotfile='flag1500m.png'
+        plotms()
+    
+    os.system('mv flag*.png plots')
 
 ######################################################################
     weblog_file=find('index.html',nrao_weblog_path+SDM_name)
@@ -882,8 +1017,6 @@ try:
 
 
 # Assemble graphical output for this stage.
-# Need to include:  links to NRAO continuum pipeline, prtan output, logs
-# Anything else?
 
     syscommand="rm -rf *.html"
     os.system(syscommand)
@@ -906,6 +1039,13 @@ try:
     wlog.write('<br>\n')
     wlog.write('<li><a href="logs/initial.log">Initial Module Log</a></li>\n')
     wlog.write('<br>\n')
+    wlog.write('<li> Amp. vs. Frequency for phase calibrator showing uncalibrated masking: \n')
+    wlog.write('<br>\n')
+    wlog.write('<table> \n')
+    for ii in seq:
+        wlog.write('<tr><img src="plots/flag1500m_Spw'+str(ii)+'.png"></tr>\n')
+    wlog.write('</table> \n')
+    wlog.write('</li>')
     wlog.write('<br>')
     wlog.write('<hr>\n')
     wlog.write('</body>\n')

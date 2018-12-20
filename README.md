@@ -1,7 +1,7 @@
 # chiles-pipeline
 README for CHILES Pipeline
-October 14, 2018
-Version 3.3
+December 19, 2018
+Version 3.4
 
 This is the production quality version of the pipeline.  It is
 designed to run on CASA 5.3.0  It can be found in Socorro at 
@@ -74,6 +74,8 @@ v3.0:  	Updated to CASA 5.1.2,
 	changed flagging to clip spw=14, then determine RMS for RFLAG, then flag.
 		no EXTEND on flagging routines anymore
 		time-averaging is still being done for the target (using preset RMS)
+
+v3.4:   Masking of RFI-affected channels is done for calibrators in the initial module.  Plots have also been updated.  
 
 
 Detailed description of CHILES pipeline scripts:
