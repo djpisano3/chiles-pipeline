@@ -141,6 +141,28 @@ oldsplit()
 
 os.system("mv "+targetfile+" FINAL/")
 
+# Split with temporal and spectral smoothing.  
+outputms=ms_active[:-3]+'_calibrated_deepfield_SMOOTH.ms'
+targetfile=outputms
+
+# Delete final MS if already present
+if os.path.exists(targetfile):
+    os.system("rm -rf "+targetfile)
+    os.system("rm -rf FINAL/"+targetfile)
+
+# Smooth to 16s time resolution and 62.4 kHz channels       
+default('oldsplit')
+vis=ms_active
+datacolumn='corrected'
+outputvis=targetfile
+field='deepfield'
+spw ='0~14'
+width=4
+timebin='16s'
+oldsplit()
+
+os.system("mv "+targetfile+" FINAL/")
+
 # Save calibration tables
 if os.path.exists('antposcal.p')==True:
     os.system("cp -r antposcal.p FINAL/.")

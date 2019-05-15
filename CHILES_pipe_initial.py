@@ -66,10 +66,11 @@
 # v3.3: Replace masks with flagging of bad RFI channels, including flagging statistics, make cubes of calibrators
 # v3.3.1:  Fixed BP masks (all channels included) and fixed bugs in testcubes, split modules
 # v3.4:  Updated plots, order of flagging, increased quacking, etc.  
+# v3.5:  Insert smoothing of final data to 62.4 kHz, fix some plots, remove phase calibration of 3C286, remove some cubes/images, increase quack time to 3.5xint_time
 
-version = "3.4"
+version = "3.5"
 svnrevision = '11nnn'
-date = "2018Dec19"
+date = "2019May15"
 
 print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys
@@ -649,54 +650,9 @@ try:
     vis=ms_active
     figfile='antpos.png'
     logpos=True
-    antindex=True
+    antindex=False  #Not needed
     plotants()
     
-#PRTAN
-#This program mimics the behavior of PRTAN in AIPS by plotting the locations
-#of VLA antennas based on their station location, not their physical position,
-#so that they are reasonably spaced on a plot.
-#3/24/15 DJP
-#
-#    tb.open(ms_active+"/ANTENNA")
-#    antname=tb.getcol("NAME")
-#    station=tb.getcol("STATION")
-#    x=np.zeros(len(antname))
-#    y=np.zeros(len(antname))
-#    
-##For N antennas plot at x=0, y=Station #/4
-##For W antennas plot at x=Station #/4*-cos(-45), y=Station #/4*sin(-45)
-##For E antennas plot at x=Station #/4*cos(45), y=Station #/4*sin(-45)
-#
-#    for i in range(len(antname)):
-#        if station[i].find("N") >= 0:
-#            y[i]=float(re.findall('\d+',station[i])[0])/4.
-#        if station[i].find("E") >= 0:
-#            x[i]=float(re.findall('\d+',station[i])[0])/4.*(np.cos(-np.pi/4.))
-#            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
-#        if station[i].find("W") >= 0:
-#            x[i]=float(re.findall('\d+',station[i])[0])/4.*(-np.cos(-np.pi/4.))
-#            y[i]=float(re.findall('\d+',station[i])[0])/4.*(np.sin(-np.pi/4.))
-#    pylab.ioff()
-#    pylab.figure()
-#    pylab.plot(x,y,'w.')
-#    for i in range(len(antname)):
-#        pylab.text(x[i],y[i],antname[i])
-#    
-##Compare list of antennas in array to those not in use, print those not in use at bottom of plot
-#    antlist=['ea01','ea02','ea03','ea04','ea05','ea06','ea07','ea08','ea09','ea10','ea11','ea12','ea13','ea14','ea15','ea16','ea17','ea18','ea19','ea20','ea21','ea22','ea23','ea24','ea25','ea26','ea27','ea28']
-#
-#    badant=list(set(antlist)-set(antname))
-#    badname=''
-#    for i in range(len(badant)):
-#        badname+=badant[i]
-#        badname+=' '
-#    xb=-0.05*len(badname)
-#    yb=min(y)
-#    pylab.text(-xb,yb,badname)
-#    pylab.tick_params(reset=True,axis='both',which='both',top='off',labeltop='off',bottom='off',labelbottom='off',left='off',labelleft='off',right='off',labelright='off')
-#    pylab.savefig('antpos.png')
-##END PRTAN
     if os.path.exists('plots')==False:
         os.system("mkdir plots")
     os.system("mv antpos.png plots/.")
@@ -788,10 +744,10 @@ try:
     cmdreason_list=[]
 
 
-# Quack the data, update to 2.5*int_time
+# Quack the data, update to 3.5*int_time
     logprint ("Quack the data", logfileout='logs/initial.log')
     flagdata_list.append("mode='quack' scan=" + quack_scan_string +
-        " quackinterval=" + str(2.5*int_time) + " quackmode='beg' " +
+        " quackinterval=" + str(3.5*int_time) + " quackmode='beg' " +
         "quackincrement=False")
     
 #Write out list for use in flagdata mode 'list'
@@ -873,6 +829,7 @@ try:
     os.system("mv initial_flag_uvdist.png plots/.") 
     
 #Flag regions that are badly affected by RFI on calibrators only.
+# These regions were chosen for Epoch 2 specifically.  Needs to be updated (slightly) for other epochs.
     flag_spw=('*:952.6~952.9MHz,'
     '*:977.64~977.72MHz,'
     '*:985.0~989.5MHz,'
@@ -996,6 +953,7 @@ try:
         iteraxis='spw'
         showlegend=False
         title='Flagged Phase Calibrator Data for Spw'+str(ii)+': 1500-1600m'
+        plotrange=[0,0,0,2.]  # Update y-range to exclude worst RFI from plots.
         showgui=False
         clearplots=True
         customsymbol=True

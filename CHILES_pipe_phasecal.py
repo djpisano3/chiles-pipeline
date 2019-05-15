@@ -25,6 +25,7 @@
 # 8/29/18 DJP: Changing field numbers to field names.
 # 10/8/18 DJP: Including flagging percentage vs. uvdist, use flags instead of masks.
 # 12/19/18 DJP: Moved flagging mask regions to initial module
+# 05/15/19 DJP:  No longer doing phase calibration on flux calibrator, make UVSPEC of phase v. frequency
 
 
 logprint ("Starting CHILES_pipe_phasecal.py", logfileout='logs/phasecal.log')
@@ -108,7 +109,7 @@ logprint ("Running initial gaincal", logfileout='logs/phasecal.log')
 default('gaincal')
 vis=ms_active
 caltable='initialphase.gcal'
-field='J0943-0819,1331+305=3C286'
+field='J0943-0819'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -147,7 +148,7 @@ SpwMapValues.append([])
 default('gaincal')
 vis=ms_active
 caltable='initialamp.gcal'
-field='J0943-0819,1331+305=3C286'
+field='J0943-0819'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -417,23 +418,23 @@ flagbackup=False
 async=False
 applycal()
 
-default('applycal')
-vis=ms_active
-field='1331+305=3C286'            # Apply same calibration to flux cal
-spw=''
-intent=''
-selectdata=True
-gaintable=AllCalTables
-gainfield=FluxFields
-interp=['']             # Default interpolation is linear in time & frequency
-spwmap=AllSpwMapValues  # In previous version this was [].  These spw's correspond to AllCalTables.
-gaincurve=False
-opacity=[]
-parang=False
-calwt=False
-flagbackup=False
-async=False
-applycal()
+# default('applycal')
+# vis=ms_active
+# field='1331+305=3C286'            # Apply same calibration to flux cal
+# spw=''
+# intent=''
+# selectdata=True
+# gaintable=AllCalTables
+# gainfield=FluxFields
+# interp=['']             # Default interpolation is linear in time & frequency
+# spwmap=AllSpwMapValues  # In previous version this was [].  These spw's correspond to AllCalTables.
+# gaincurve=False
+# opacity=[]
+# parang=False
+# calwt=False
+# flagbackup=False
+# async=False
+# applycal()
 
 # Step 6: run RFLAG 
 # New Flagging routines from XF
@@ -532,7 +533,7 @@ logprint ("Running final gaincal", logfileout='logs/phasecal.log')
 default('gaincal')
 vis=ms_active
 caltable='finalphase_int.gcal'
-field='J0943-0819,1331+305=3C286'
+field='J0943-0819'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -560,7 +561,7 @@ gaincal()
 default('gaincal')
 vis=ms_active
 caltable='finalphase_scan.gcal'
-field='J0943-0819,1331+305=3C286'
+field='J0943-0819'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -595,7 +596,7 @@ SpwMapValues.append([])
 default('gaincal')
 vis=ms_active
 caltable='finalamp.gcal'
-field='J0943-0819,1331+305=3C286'
+field='J0943-0819'
 spw=tst_gain_spw
 intent=''
 selectdata=False
@@ -872,23 +873,23 @@ flagbackup=False
 async=False
 applycal()
 
-default('applycal')
-vis=ms_active
-field='1331+305=3C286'            # Apply same calibration to phase cal
-spw=''
-intent=''
-selectdata=True
-gaintable=AllCalTables
-gainfield=FluxFields
-interp=['']
-spwmap=AllSpwMapValues  # Was [] in previous version, now corresponds to AllCalTables
-gaincurve=False
-opacity=[]
-parang=False
-calwt=False
-flagbackup=False
-async=False
-applycal()
+# default('applycal')
+# vis=ms_active
+# field='1331+305=3C286'            # Apply same calibration to flux cal
+# spw=''
+# intent=''
+# selectdata=True
+# gaintable=AllCalTables
+# gainfield=FluxFields
+# interp=['']
+# spwmap=AllSpwMapValues  # Was [] in previous version, now corresponds to AllCalTables
+# gaincurve=False
+# opacity=[]
+# parang=False
+# calwt=False
+# flagbackup=False
+# async=False
+# applycal()
 
 # Save flags
 logprint ("Saving flags", logfileout='logs/phasecal.log')
@@ -988,6 +989,14 @@ plotms()
 
 plotrange=[0.95,1.43,2.7,3.5]
 plotfile='phasecal_spectrum_zoom.png'
+plotms()
+
+# Plot calibrated phase vs. frequency
+xaxis='freq'
+yaxis='phase'
+plotrange=[0.95,1.43,0,0]
+clearplots=True
+plotfile='phasecal_phasespectrum.png'
 plotms()
 
 
@@ -1244,6 +1253,7 @@ for ii in seq:
 wlog.write('<li> Spectrum of Phase calibrator (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/phasecal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/phasecal_spectrum_zoom.png">\n')
+wlog.write('<br><img src="plots/phasecal_phasespectrum.png">\n')
 wlog.write('<li> Amp. & Phase vs. time for Phase Calibrator (averaged over frequency): \n')
 wlog.write('<table> \n')
 for ii in seq:

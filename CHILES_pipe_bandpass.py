@@ -392,56 +392,7 @@ flagbackup=False
 savepars=True
 flagdata()
 
-# Below is the old code for flagging.
-#logprint ("RFLAG+Extend on flux calibrator", logfileout='logs/bandpass.log')
-#
-#f=ms.msseltoindex(vis=ms_active,field='1331*')['field']
-#ff= float(f[0])
-#
-#default('flagdata')
-#vis=ms_active
-#mode='rflag'
-#field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
-#spw='0~14'
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendflags=False    # Explicitly set to False since default is True.  Extending on next step. 
-#extendpols=False     # Default is True.  May allow some weak RFI through, but try it.   
-#winsize=3
-#freqdev=[[ff,0.0,7.1],[ff,1.0,5.5],[ff,2.0,4.5],[ff,3.0,4.1],[ff,4.0,3.9],[ff,5.0,3.7],[ff,6.0,3.6],[ff,7.0,3.7],[ff,8.0,3.3],[ff,9.0,3.0],[ff,10.0,3.0],[ff,11.0,3.0],[ff,12.0,2.9],[ff,13.0,3.0],[ff,14.0,3.0]]
-#timedev=[[ff,0.0,9.4],[ff,1.0,7.3],[ff,2.0,5.9],[ff,3.0,5.4],[ff,4.0,5.2],[ff,5.0,4.9],[ff,6.0,4.8],[ff,7.0,4.9],[ff,8.0,4.4],[ff,9.0,4.0],[ff,10.0,3.9],[ff,11.0,3.9],[ff,12.0,3.9],[ff,13.0,4.0],[ff,14.0,4.0]]
-#timedevscale=1.0
-#freqdevscale=1.0
-#action='apply'
-#display=''
-#flagbackup=False
-#savepars=True
-#flagdata()
-#
-##9:
-#default('flagdata')
-#vis=ms_active
-#mode='extend'
-#field='1331+305=3C286'            # Hard-coded to field 2 as this is always 3C286
-#correlation=''
-#ntime='scan'
-#combinescans=False
-#datacolumn='corrected'
-#extendpols=False      
-#growtime=70       
-#growfreq=80       
-#growaround=True      
-#flagneartime=True   # Flag neighboring times to existing flags
-#flagnearfreq=True   # Flag neighboring channels to existing flags    
-#action='apply'
-#display=''
-#flagbackup=False   # Will backup final flagging manually.
-#savepars=True
-#flagdata()
-
-# Summary of flagging, after RFLAG+extend (for testing purposes only)
+# Summary of flagging, after RFLAG 
 logprint ("Summary of flags after Flagging", logfileout='logs/bandpass.log')
 default('flagdata')
 vis=ms_active
@@ -788,6 +739,15 @@ plotrange=[0.95,1.43,14.5,18.5]
 plotfile='fluxcal_spectrum_zoom.png'
 plotms()
 
+# Plot calibrated phase vs. frequency
+xaxis='freq'
+yaxis='phase'
+plotrange=[0.95,1.43,0,0]
+clearplots=True
+plotfile='fluxcal_phasespectrum.png'
+plotms()
+
+
 
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_flux_averaged.ms'
@@ -1033,6 +993,7 @@ for ii in seq:
 wlog.write('<li> Spectrum of Flux calibrator (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_zoom.png">\n')
+wlog.write('<br><img src="plots/fluxcal_phasespectrum.png">\n')
 wlog.write('<li> Amp. & Phase vs. time for Flux Calibrator (averaged over frequency): \n')
 wlog.write('<table> \n')
 for ii in seq:

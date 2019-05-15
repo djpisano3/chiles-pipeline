@@ -20,6 +20,8 @@
 # 4/22/18 DJP: Changing flagging and split to oldsplit
 # 8/29/18 DJP: Changed field='1' to field='deepfield' and other fields to their name instead of number.  
 # 12/19/18 DJP: Set flagbackup=False when doing 90% flags.
+# 05/15/19 DJP:  Removed images from plots.
+
 
 
 
@@ -510,10 +512,10 @@ pylab.close(fig)
 
 #Want to plot image of flux calibrator in each spw.  Use "imview"
 
-for ii in seq:
-    image_target='target_spw'+str(ii)+'.image'
-    kntr_levels=[-2*rms_target[ii]/1000.,2*rms_target[ii]/1000.,0.1*max_target[ii],0.3*max_target[ii],0.5*max_target[ii],0.7*max_target[ii],0.9*max_target[ii]]
-    imview(raster={'file':image_target, 'colorwedge':True},contour={'file':image_target,'levels':kntr_levels},out='target_spw'+str(ii)+'.png')
+# for ii in seq:
+#     image_target='target_spw'+str(ii)+'.image'
+#     kntr_levels=[-2*rms_target[ii]/1000.,2*rms_target[ii]/1000.,0.1*max_target[ii],0.3*max_target[ii],0.5*max_target[ii],0.7*max_target[ii],0.9*max_target[ii]]
+#     imview(raster={'file':image_target, 'colorwedge':True},contour={'file':image_target,'levels':kntr_levels},out='target_spw'+str(ii)+'.png')
 
 
 #Move plots, images to sub-directory
@@ -547,10 +549,10 @@ wlog.write('</table> \n')
 wlog.write('<li> Spectrum of Deepfield (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/target_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/target_spectrum_zoom.png">\n')
-wlog.write('<li> Images of Deepfield: \n')
-for ii in seq:
-    wlog.write('<br><img src="plots/target_spw'+str(ii)+'.png">\n')
-wlog.write('</li>')
+# wlog.write('<li> Images of Deepfield: \n')
+# for ii in seq:
+#     wlog.write('<br><img src="plots/target_spw'+str(ii)+'.png">\n')
+# wlog.write('</li>')
 wlog.write('<li> Measured properties of deepfield: \n')
 wlog.write('<br><img src="plots/target_beamsize.png">\n')
 wlog.write('<br><img src="plots/target_peak.png">\n')

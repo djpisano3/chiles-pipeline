@@ -468,6 +468,14 @@ plotrange=[0.95,1.43,14.5,18.5]
 plotfile='fluxcal_spectrum_zoom.png'
 plotms()
 
+# Plot calibrated phase vs. frequency
+xaxis='freq'
+yaxis='phase'
+plotrange=[0.95,1.43,0,0]
+clearplots=True
+plotfile='fluxcal_phasespectrum.png'
+plotms()
+
 
 ms_name=ms_active[:-3]
 output_ms=ms_name+'_flux_averaged.ms'
@@ -713,6 +721,7 @@ for ii in seq:
 wlog.write('<li> Spectrum of Flux calibrator (both LL & RR, averaged over all time & baselines): \n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_full.png">\n')
 wlog.write('<br><img src="plots/fluxcal_spectrum_zoom.png">\n')
+wlog.write('<br><img src="plots/fluxcal_phasespectrum.png">\n')
 wlog.write('<li> Amp. & Phase vs. time for Flux Calibrator (averaged over frequency): \n')
 wlog.write('<table> \n')
 for ii in seq:

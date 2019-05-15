@@ -13,7 +13,7 @@
 # but can be run on any system. This module is used instead of CHILES_pipeline.py
 #
 # This script should be run from the command line in the following way:
-# casa --nogui --nologger --agg -c "var=[sessionnumber]; execfile('path/CHILES_pipeline_batch.py')
+# casa --nogui --nologger --agg -c "var=[sessionnumber]; execfile('path/CHILES_pipeline_batch.py')"
 #
 # 8/29/18 DJP
 
@@ -25,7 +25,7 @@ from numpy import loadtxt
 # Set pipeline path
 #pipepath='/data/dpisano/CHILES/chiles_pipeline/'
 #pipepath='/users/djpisano/chiles_pipeline/'
-pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
+pipepath='/lustre/aoc/projects/chiles/cluster_pipeline/'
 
 #Determine which dataset to process
 
@@ -56,8 +56,8 @@ par.append(sl[sessionnum])
 
 # Set parent data directory (so data can be found)
 #datapath='/data/dpisano/CHILES/DATA/'
-#datapath='/scratch/djpisano/'
-datapath='/lustre/aoc/projects/chiles/phase2/'
+datapath='/scratch/djpisano/'
+#datapath='/lustre/aoc/projects/chiles/phase2/'
 if os.getcwd() != datapath:
     os.chdir(datapath)
 
