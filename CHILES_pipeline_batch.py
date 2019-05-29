@@ -56,8 +56,8 @@ par.append(sl[sessionnum])
 
 # Set parent data directory (so data can be found)
 #datapath='/data/dpisano/CHILES/DATA/'
-datapath='/scratch/djpisano/'
-#datapath='/lustre/aoc/projects/chiles/phase2/'
+#datapath='/scratch/djpisano/'
+datapath='/lustre/aoc/projects/chiles/epoch2/'
 if os.getcwd() != datapath:
     os.chdir(datapath)
 

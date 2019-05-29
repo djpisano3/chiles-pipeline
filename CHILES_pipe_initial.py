@@ -70,7 +70,7 @@
 
 version = "3.5"
 svnrevision = '11nnn'
-date = "2019May15"
+date = "2019May29"
 
 print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys
@@ -221,7 +221,7 @@ try:
         addantenna=''
         applyflags=True     #Apply online, zero flags on import.
         savecmds=False
-        flagbackup=False
+        flagbackup=True     #Just in case we want to get back to online flags only
         importevla()
 
         logprint ("Measurement set "+msname+" created", logfileout='logs/initial.log')
@@ -747,8 +747,8 @@ try:
 # Quack the data, update to 3.5*int_time
     logprint ("Quack the data", logfileout='logs/initial.log')
     flagdata_list.append("mode='quack' scan=" + quack_scan_string +
-        " quackinterval=" + str(3.5*int_time) + " quackmode='beg' " +
-        "quackincrement=False")
+        " quackinterval=" + str(1.5*int_time) + " quackmode='beg' " +
+        "quackincrement=True")
     
 #Write out list for use in flagdata mode 'list'
     f = open(outputflagfile, 'a')
@@ -970,7 +970,7 @@ try:
     if weblog_file==None:
         tu=qa.quantity(startdate,'d')
         obsdate=qa.time(tu,form=['fits','no_time'])
-        dirname='13B-266'+str(obsdate).replace('-','_')+'*/products/pipeline*/html/'
+        dirname='13B-266_'+str(obsdate[0]).replace('-','_')+'*/products/pipeline*/html/'
         weblog_file=find('index.html',glob.glob(nrao_weblog_path+dirname)[0])
 
 
