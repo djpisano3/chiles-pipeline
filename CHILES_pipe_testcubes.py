@@ -321,7 +321,6 @@ tHI_flux=[]
 freq_t10=[]
 freq_tHI=[]
 
-seq=range(0,15)
 for ii in seq:       
     logprint ('Extract Data from Cubes, Spw='+str(ii), logfileout='logs/testcubes.log')
     
