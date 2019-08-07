@@ -1,7 +1,7 @@
 # chiles-pipeline
 README for CHILES Pipeline
-May 15, 2019
-Version 3.5
+August 4, 2019
+Version 3.6
 
 This is the production quality version of the pipeline.  It is
 designed to run on CASA 5.3.0  It can be found in Socorro at 
@@ -66,16 +66,6 @@ restore the pipeline state by running > execfile('/path/
 CHILES_pipe_restore.py') before you run the next module.  CASA does 
 not always remove caltables from memory after plotting so you will 
 likely have to restart CASA when re-running modules.  
-
-Description of latest changes:
-
-v3.0:  	Updated to CASA 5.1.2, 
-	changed from split to oldsplit (due to errors in split)
-	changed flagging to clip spw=14, then determine RMS for RFLAG, then flag.
-		no EXTEND on flagging routines anymore
-		time-averaging is still being done for the target (using preset RMS)
-
-v3.4:   Masking of RFI-affected channels is done for calibrators in the initial module.  Plots have also been updated.  
 
 
 Detailed description of CHILES pipeline scripts:

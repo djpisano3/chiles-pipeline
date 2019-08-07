@@ -23,9 +23,9 @@ import glob
 from numpy import loadtxt
 
 # Set pipeline path
-#pipepath='/data/dpisano/CHILES/chiles_pipeline/'
+pipepath='/data/dpisano/CHILES/chiles_pipeline/'
 #pipepath='/users/djpisano/chiles_pipeline/'
-pipepath='/lustre/aoc/projects/chiles/cluster_pipeline/'
+#pipepath='/lustre/aoc/projects/chiles/cluster_pipeline/'
 
 #Determine which dataset to process
 
@@ -55,9 +55,9 @@ sl=loadtxt(fname,str,skiprows=headlen,delimiter=';',usecols=[5])
 par.append(sl[sessionnum])
 
 # Set parent data directory (so data can be found)
-#datapath='/data/dpisano/CHILES/DATA/'
+datapath='/data/dpisano/CHILES/DATA/'
 #datapath='/scratch/djpisano/'
-datapath='/lustre/aoc/projects/chiles/epoch2/'
+#datapath='/lustre/aoc/projects/chiles/epoch2/'
 if os.getcwd() != datapath:
     os.chdir(datapath)
 

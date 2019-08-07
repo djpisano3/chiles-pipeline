@@ -67,10 +67,11 @@
 # v3.3.1:  Fixed BP masks (all channels included) and fixed bugs in testcubes, split modules
 # v3.4:  Updated plots, order of flagging, increased quacking, etc.  
 # v3.5:  Insert smoothing of final data to 62.4 kHz, fix some plots, remove phase calibration of 3C286, remove some cubes/images, increase quack time to 3.5xint_time
+# v3.6   Added flagging reason to flagdata commands (to help with un-flagging).  Added "style" command to html files to help with PDF conversions.
 
-version = "3.5"
+version = "3.6"
 svnrevision = '11nnn'
-date = "2019May29"
+date = "2019Aug04"
 
 print "Pipeline version "+version+" for use with CASA 5.3.0"
 import sys
@@ -94,13 +95,13 @@ try:
     pipepath
 except:
     #pipepath='/lustre/aoc/cluster/pipeline/script/prod/'
-    #pipepath='/data/dpisano/CHILES/chiles_pipeline/'
+    pipepath='/data/dpisano/CHILES/chiles_pipeline/'
     #pipepath='/users/djpisano/chiles_pipeline/'
-    pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
+    #pipepath='/lustre/aoc/projects/chiles/chiles_pipeline/'
 
 # Define location of output files from NRAO continuum pipeline
-#nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
-nrao_weblog_path='/lustre/aoc/projects/chiles/weblogs/'
+nrao_weblog_path='/data/dpisano/CHILES/weblogs/'
+#nrao_weblog_path='/lustre/aoc/projects/chiles/weblogs/'
 
 # To find the path to the weblog index.html file for the NRAO pipeline run:
 def find(name,path):
@@ -672,6 +673,7 @@ try:
         action='apply'
         flagbackup=False
         savepars=False
+        reason='Bad Antennas'
         flagdata()
         clearstat()
         logprint ("Bad antenna Flagging completed", logfileout='logs/initial.log')
@@ -687,6 +689,7 @@ try:
     mode ='manual'
     spw =contspw
     action ='apply'
+    reason='Continuum SPWs'
     flagbackup=False
     flagdata()
     
@@ -716,6 +719,7 @@ try:
         clipzeros=True
         correlation='ABS_ALL'
         action='apply'
+        reason='Zero Flags'
         flagbackup=False
         savepars=False
         outfile=outputflagfile
@@ -767,7 +771,7 @@ try:
     action='apply'
     flagbackup=False
     savepars=True
-    cmdreason=string.join(cmdreason_list, ',')
+    reason=string.join(cmdreason_list, ',')
     flagdata()
     clearstat()
     
@@ -932,6 +936,7 @@ try:
     spw=flag_spw
     mode='manual'
     action='apply'
+    reason='Mask RFI'
     flagbackup=False
     flagdata()
     
@@ -983,6 +988,7 @@ try:
     wlog.write('<html>\n')
     wlog.write('<head>\n')
     wlog.write('<title>CHILES Pipeline Web Log</title>\n')
+    wlog.write('<style>table tr {page-break-inside: avoid}</style>\n')
     wlog.write('</head>\n')
     wlog.write('<body>\n')
     wlog.write('<br>\n')

@@ -447,6 +447,7 @@ spw='14'
 mode='clip'
 clipminmax=[0,30]
 action='apply'
+reason='Clip Phase Cal'
 flagbackup=False
 flagdata()
 
@@ -501,6 +502,7 @@ timedevscale=1.0
 freqdevscale=1.0
 action='apply'
 display=''
+reason='RFLAG Phase Cal'
 flagbackup=False
 savepars=True
 flagdata()
@@ -1235,6 +1237,7 @@ wlog = open("phasecal.html","w")
 wlog.write('<html>\n')
 wlog.write('<head>\n')
 wlog.write('<title>CHILES Pipeline Web Log</title>\n')
+wlog.write('<style>table tr {page-break-inside: avoid}</style>\n')
 wlog.write('</head>\n')
 wlog.write('<body>\n')
 wlog.write('<br>\n')

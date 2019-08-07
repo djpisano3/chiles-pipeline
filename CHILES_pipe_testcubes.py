@@ -105,11 +105,10 @@ for ii in seq:
 #         fluxfile=fluxms+'_spw'+str(ii)+'.ms'
 #         image_name='fluxcube_spw'+str(ii)
 #         fieldid='1331+305=3C286'
-#         grid_mode=''
-#         number_w=1
-#         image_size=[64,64]
+        number_w=1
+        image_size=[64,64]
 #         iteration=10000   # Total number of iterations for the entire cube (per spw), ~4 per channel 
-#         mask_name=['']    
+        mask_name=['']    
 # 
 #         vis=fluxfile
 #         imagename=image_name
@@ -210,13 +209,11 @@ for ii in seq:
         nterms=1
         niter=iteration
         gain=0.1
-        gridmode=grid_mode
         wprojplanes=number_w
         threshold='10.0mJy'  # Adding threshold
         deconvolver='clark'
-        imagermode='csclean'
+        #imagermode='csclean'
         cyclefactor=1.5
-        cyclespeedup=-1
         multiscale=[]
         interactive=False
         mask=mask_name
@@ -255,13 +252,11 @@ for ii in seq:
             nterms=1
             niter=iteration
             gain=0.1
-            gridmode=grid_mode
             wprojplanes=number_w
             threshold='10.0mJy'
             deconvolver='clark'
-            imagermode='csclean'
+            #imagermode='csclean'
             cyclefactor=1.5
-            cyclespeedup=-1
             multiscale=[]
             interactive=False
             mask=mask_name
@@ -601,6 +596,7 @@ wlog = open("testcubes.html","w")
 wlog.write('<html>\n')
 wlog.write('<head>\n')
 wlog.write('<title>CHILES Pipeline Web Log</title>\n')
+wlog.write('<style>table tr {page-break-inside: avoid}</style>\n')
 wlog.write('</head>\n')
 wlog.write('<body>\n')
 wlog.write('<br>\n')
