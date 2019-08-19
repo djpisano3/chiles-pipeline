@@ -334,7 +334,7 @@ spw='14'
 mode='clip'
 clipminmax=[0,50]
 action='apply'
-reason='Clip Flux Cal'
+cmdreason='Clip Flux Cal'
 flagbackup=False
 flagdata()
 
@@ -389,7 +389,7 @@ timedevscale=1.0
 freqdevscale=1.0
 action='apply'
 display=''
-reason='RFLAG Flux Cal'
+cmdreason='RFLAG Flux Cal'
 flagbackup=False
 savepars=True
 flagdata()
